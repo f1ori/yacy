@@ -71,6 +71,7 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
+import net.yacy.cider.AugmentedHtmlStream;
 import net.yacy.cora.protocol.Domains;
 import net.yacy.cora.protocol.HeaderFramework;
 import net.yacy.cora.protocol.RequestHeader;
@@ -497,6 +498,12 @@ public final class HTTPDProxyHandler {
 //                    throw new Exception(res.getStatusLine());
                 	throw new Exception(client.getHttpResponse().getStatusLine().toString());
                 }
+                
+                if(AugmentedHtmlStream.supportsMime(responseHeader.mime())) {
+                	// enable chunk encoding, because we don't know the length after annotating
+                	responseHeader.remove(HeaderFramework.CONTENT_LENGTH);
+                	responseHeader.put(HeaderFramework.TRANSFER_ENCODING, "chunked");
+                }
 
 //                final ChunkedOutputStream chunkedOut = setTransferEncoding(conProp, responseHeader, res.getStatusCode(), respond);
                 final ChunkedOutputStream chunkedOut = setTransferEncoding(conProp, responseHeader, client.getHttpResponse().getStatusLine().getStatusCode(), respond);
@@ -533,10 +540,6 @@ public final class HTTPDProxyHandler {
 //                prepareResponseHeader(responseHeader, res.getHttpVer());
                 prepareResponseHeader(responseHeader, client.getHttpResponse().getProtocolVersion().toString());
 
-                // sending the respond header back to the client
-                if (chunkedOut != null) {
-                    responseHeader.put(HeaderFramework.TRANSFER_ENCODING, "chunked");
-                }
 
                 if (log.isFinest()) log.logFinest(reqID +"    sending response header: "+ responseHeader);
 //                HTTPDemon.sendRespondHeader(
@@ -557,7 +560,7 @@ public final class HTTPDProxyHandler {
 //                if (hasBody(res.getStatusCode())) {
                 if (hasBody(client.getHttpResponse().getStatusLine().getStatusCode())) {
 
-                    final OutputStream outStream = (gzippedOut != null) ? gzippedOut : ((chunkedOut != null)? chunkedOut : respond);
+                    OutputStream outStream = (gzippedOut != null) ? gzippedOut : ((chunkedOut != null)? chunkedOut : respond);
                     final Response response = new Response(
                             request,
                             requestHeader,
@@ -569,6 +572,10 @@ public final class HTTPDProxyHandler {
                     final String storeError = response.shallStoreCacheForProxy();
                     final boolean storeHTCache = response.profile().storeHTCache();
                     final String supportError = TextParser.supports(response.url(), response.getMimeType());
+                    
+                    if(AugmentedHtmlStream.supportsMime(responseHeader.mime())) {
+                    	outStream = new AugmentedHtmlStream(outStream, responseHeader.getCharSet());
+                    }
                     if (
                             /*
                              * Now we store the response into the htcache directory if
@@ -637,6 +644,7 @@ public final class HTTPDProxyHandler {
                         conProp.setProperty(HeaderFramework.CONNECTION_PROP_PROXY_RESPOND_CODE,"TCP_MISS");
                     }
 
+                    outStream.close();
                     if (gzippedOut != null) {
                         gzippedOut.finish();
                     }
@@ -699,7 +707,7 @@ public final class HTTPDProxyHandler {
         
         // we respond on the request by using the cache, the cache is fresh        
         try {
-            prepareResponseHeader(cachedResponseHeader, httpVer);               
+            prepareResponseHeader(cachedResponseHeader, httpVer);
 
             // replace date field in old header by actual date, this is according to RFC
             cachedResponseHeader.put(HeaderFramework.DATE, HeaderFramework.formatRFC1123(new Date()));
@@ -729,12 +737,17 @@ public final class HTTPDProxyHandler {
                 HTTPDemon.sendRespondHeader(conProp,respond,httpVer,203,cachedResponseHeader);
                 //respondHeader(respond, "203 OK", cachedResponseHeader); // respond with 'non-authoritative'
                 
-                final OutputStream outStream = (gzippedOut != null) ? gzippedOut : ((chunkedOut != null)? chunkedOut : respond);
+                OutputStream outStream = (gzippedOut != null) ? gzippedOut : ((chunkedOut != null)? chunkedOut : respond);
+                
+                if(AugmentedHtmlStream.supportsMime(cachedResponseHeader.mime())) {
+                	outStream = new AugmentedHtmlStream(outStream, cachedResponseHeader.getCharSet());
+                }
 
                 // send also the complete body now from the cache
                 // simply read the file and transfer to out socket
                 FileUtils.copy(cacheEntry, outStream);
                 
+                outStream.close();
                 if (gzippedOut != null) gzippedOut.finish();
                 if (chunkedOut != null) chunkedOut.finish();
             }
@@ -1233,7 +1246,7 @@ public final class HTTPDProxyHandler {
         headers.remove(RequestHeader.X_CACHE_LOOKUP);     
         
         // remove transfer encoding header
-        headers.remove(HeaderFramework.TRANSFER_ENCODING);
+        //headers.remove(HeaderFramework.TRANSFER_ENCODING);
         
         //removing yacy status headers
         headers.remove(HeaderFramework.X_YACY_KEEP_ALIVE_REQUEST_COUNT);
