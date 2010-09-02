@@ -58,6 +58,7 @@ public class Steering {
 
         if (post.containsKey("shutdown")) {
             Log.logInfo("STEERING", "shutdown request from " + requestIP);
+            System.out.println("Watchdog command: STOP");
             sb.terminate(100, "shutdown request from Steering; ip = " + requestIP);
             prop.put("info", "3");
             

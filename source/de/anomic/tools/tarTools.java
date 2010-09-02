@@ -81,6 +81,40 @@ public class tarTools {
 		Log.logInfo("UNTAR", "finished");
 	}
 	
+	/**
+	 * untar for any archive, overwrites existing data
+	 * @param in use getInputStream() for convenience
+	 * @param untarDir destination path
+	 * @param prefix remove prefix from path or ignore path
+	 * @throws Exception (IOException or FileNotFoundException)
+	 */
+	public static void unTar(final InputStream in, final String untarDir, final String prefix) throws Exception{
+		Log.logInfo("UNTAR", "starting");
+		if(new File(untarDir).exists()){
+			final TarInputStream tin = new TarInputStream(in);
+			TarEntry tarEntry = tin.getNextEntry();
+			while(tarEntry != null) {
+				if(tarEntry.getName().startsWith(prefix)) {
+					System.out.println(tarEntry.getName());
+					final File destPath = new File(untarDir + File.separator + tarEntry.getName().substring(prefix.length()));
+					if (!tarEntry.isDirectory()) {
+						new File(destPath.getParent()).mkdirs(); // create missing subdirectories
+						final FileOutputStream fout = new FileOutputStream(destPath);
+						tin.copyEntryContents(fout);
+						fout.close();
+					} else {
+						destPath.mkdir();
+					}
+				}
+				tarEntry = tin.getNextEntry();
+			}
+			tin.close();
+		} else { // untarDir doesn't exist
+			Log.logWarning("UNTAR", "destination " + untarDir + " doesn't exist.");
+		}
+		Log.logInfo("UNTAR", "finished");
+	}
+	
 	public static void main(final String args[]){
 		// @arg0 source
 		// @arg1 destination

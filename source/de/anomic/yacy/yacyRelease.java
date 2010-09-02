@@ -44,6 +44,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.yacy.Watchdog;
 import net.yacy.cora.document.MultiProtocolURI;
 import net.yacy.cora.protocol.HeaderFramework;
 import net.yacy.cora.protocol.RequestHeader;
@@ -403,7 +404,7 @@ public final class yacyRelease extends yacyVersion {
         final Switchboard sb = Switchboard.getSwitchboard();
         final String apphome = sb.getRootPath().toString();
 
-        if (OS.isWindows) {
+        /*if (OS.isWindows) {
             final File startType = new File(sb.getRootPath(), "DATA/yacy.noconsole".replace("/", File.separator));
             String starterFile = "startYACY_debug.bat";
             if (startType.exists()) starterFile = "startYACY.bat"; // startType noconsole
@@ -443,7 +444,7 @@ public final class yacyRelease extends yacyVersion {
                 } catch (IOException e) {
                     serverLog.logSevere("SHUTDOWN", "restart failed", e);
                 }
-            }*/
+            }
 
         }
 
@@ -483,7 +484,9 @@ public final class yacyRelease extends yacyVersion {
             } catch (final IOException e) {
                 Log.logSevere("RESTART", "restart failed", e);
             }
-        }
+        }*/
+        Watchdog.sendRestart();
+        sb.terminate(100, "restart request");
     }
 
     /**
@@ -494,100 +497,11 @@ public final class yacyRelease extends yacyVersion {
         if (yacyBuildProperties.isPkgManager()) {
             return;
         }
-        //byte[] script = ("cd " + plasmaSwitchboard.getSwitchboard().getRootPath() + ";while [ -e ../yacy.running ]; do sleep 1;done;tar xfz " + release + ";cp -Rf yacy/* ../../;rm -Rf yacy;cd ../../;startYACY.sh").getBytes();
-        try {
-            final Switchboard sb = Switchboard.getSwitchboard();
-            final String apphome = sb.getRootPath().toString();
-            Log.logInfo("UPDATE", "INITIATED");
-            try{
-                tarTools.unTar(tarTools.getInputStream(releaseFile), sb.getRootPath() + "/DATA/RELEASE/".replace("/", File.separator));
-            } catch (final Exception e){
-                Log.logSevere("UNTAR", "failed", e);
-            }
-            String script = null;
-            String scriptFileName = null;
-            if (OS.isWindows) {
-                final File startType = new File(sb.getRootPath(), "DATA/yacy.noconsole".replace("/", File.separator));
-                String starterFile = "startYACY_debug.bat";
-                if (startType.exists()) starterFile = "startYACY.bat"; // startType noconsole
-                script = 
-                    "@echo off" + serverCore.LF_STRING +
-                    "title YaCy updater" + serverCore.LF_STRING +
-                    "set loading=YACY UPDATER" + serverCore.LF_STRING +
-                    "echo %loading%" + serverCore.LF_STRING +
-                    "cd \"" + apphome + "/DATA/RELEASE/".replace("/", File.separator) + "\"" + serverCore.LF_STRING +
-    
-                    ":WAIT" + serverCore.LF_STRING +
-                    "set loading=%loading%." + serverCore.LF_STRING +
-                    "cls" + serverCore.LF_STRING +
-                    "echo %loading%" + serverCore.LF_STRING +
-                    "ping -n 2 127.0.0.1 >nul" + serverCore.LF_STRING +
-                    "IF exist ..\\yacy.running goto WAIT" + serverCore.LF_STRING +
-                    "IF not exist yacy goto NODATA" + serverCore.LF_STRING +
-
-                    "cd yacy" + serverCore.LF_STRING +
-                    "del /Q \"" + apphome + "\\lib\\*\"  >nul" + serverCore.LF_STRING +
-                    "xcopy *.* \"" + apphome + "\" /E /Y >nul" + serverCore.LF_STRING +
-                    // /E - all subdirectories
-                    // /Y - don't ask
-                    "cd .." + serverCore.LF_STRING +
-                    "rd yacy /S /Q" + serverCore.LF_STRING +
-                    // /S delete tree
-                    // /Q don't ask
-                    "goto END" + serverCore.LF_STRING +
-    
-                    ":NODATA" + serverCore.LF_STRING +
-                    "echo YACY UPDATER ERROR: NO UPDATE SOURCE FILES ON FILESYSTEM" + serverCore.LF_STRING +
-                    "pause" + serverCore.LF_STRING +
-    
-                    ":END" + serverCore.LF_STRING +
-                    "cd \"" + apphome + "\"" + serverCore.LF_STRING +
-                    "start /MIN CMD /C " + starterFile + serverCore.LF_STRING;
-                scriptFileName = "update.bat";
-            } else { // unix/linux
-                script =
-                    "#!/bin/sh" + serverCore.LF_STRING +
-                    "cd " + sb.getRootPath() + "/DATA/RELEASE/" + serverCore.LF_STRING +
-    /*                ((releaseFile.getName().endsWith(".gz")) ?
-                            // test gz-file for integrity and tar xfz then
-                           ("if gunzip -t " + releaseFile.getAbsolutePath() + serverCore.LF_STRING +
-                            "then" + serverCore.LF_STRING + 
-                            "gunzip -c " + releaseFile.getAbsolutePath() + " | tar xf -" + serverCore.LF_STRING) :
-                            // just tar xf the file, no integrity test possible?
-                           ("tar xf " + releaseFile.getAbsolutePath() + serverCore.LF_STRING)
-                    ) +*/
-                    "while [ -f ../yacy.running ]; do" + serverCore.LF_STRING +
-                    "sleep 1" + serverCore.LF_STRING +
-                    "done" + serverCore.LF_STRING +
-                    "rm " + apphome + "/lib/*" + serverCore.LF_STRING +
-                    "cp -Rf yacy/* " + apphome + serverCore.LF_STRING +
-                    "rm -Rf yacy" + serverCore.LF_STRING +
-    /*                ((releaseFile.getName().endsWith(".gz")) ?
-                            // else-case of gunzip -t test: if failed, just restart
-                           ("else" + serverCore.LF_STRING +
-                            "while [ -f ../yacy.running ]; do" + serverCore.LF_STRING +
-                            "sleep 1" + serverCore.LF_STRING +
-                            "done" + serverCore.LF_STRING +
-                            "fi" + serverCore.LF_STRING) :
-                            // in case that we did not made the integrity test, there is no else case
-                            ""
-                    ) +*/
-                    "cd " + apphome + serverCore.LF_STRING +
-                    "chmod 755 *.sh" + serverCore.LF_STRING + // tarTools does not keep access/execute right
-                    "chmod 755 bin/*.sh" + serverCore.LF_STRING +
-                    "nohup ./startYACY.sh > /dev/null" + serverCore.LF_STRING;
-                scriptFileName = "update.sh";
-            }
-            final File scriptFile = new File(sb.getRootPath(), "DATA/RELEASE/".replace("/", File.separator) + scriptFileName); 
-            OS.deployScript(scriptFile, script);
-            Log.logInfo("UPDATE", "wrote update-script to " + scriptFile.getAbsolutePath());
-            OS.execAsynchronous(scriptFile);
-            Log.logInfo("UPDATE", "script is running");
-            sb.setConfig("update.time.deploy", System.currentTimeMillis());
-            sb.terminate(5000, "auto-deploy for " + releaseFile.getName());
-        } catch (final IOException e) {
-            Log.logSevere("UPDATE", "update failed", e);
-        }
+        final Switchboard sb = Switchboard.getSwitchboard();
+        sb.setConfig("update.time.deploy", System.currentTimeMillis());
+        Watchdog.sendDeploy(releaseFile);
+        sb.terminate(5000, "auto-deploy for " + releaseFile.getName());
+        return;
     }
     
     public static void main(final String[] args) {
