@@ -1177,6 +1177,7 @@ public final class HTTPDProxyHandler {
                     forceConnectionClose(conProp);
                 } else {
                     chunkedOut = new ChunkedOutputStream(respond);
+                    responseHeader.put(HeaderFramework.TRANSFER_ENCODING, "chunked");
                 }
                 responseHeader.remove(HeaderFramework.CONTENT_LENGTH);
             }
