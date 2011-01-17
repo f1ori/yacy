@@ -588,6 +588,9 @@ performanceIO=10
 # properties for tasks that are performed during cleanup
 cleanup.deletionProcessedNews = true
 cleanup.deletionPublishedNews = true
+cleanup.failedSearchURLtimeout = 1000
+#cleanup.failedSearchURLtimeout = 86400000
+
 
 # default memory settings for startup of yacy
 # is valid in unix/shell and windows environments but
