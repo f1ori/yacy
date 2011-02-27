@@ -525,6 +525,7 @@ public final class HTTPDFileHandler {
             	List<Pattern> urlProxyAccess = Domains.makePatterns(sb.getConfig("proxyURL.access", "127.0.0.1"));
             	if (sb.getConfigBool("proxyURL", false) && Domains.matchesList(clientIP, urlProxyAccess)) {
             		doURLProxy(args, conProp, requestHeader, out);
+            		return;
             	}
             	else {
         			HTTPDemon.sendRespondError(conProp,out,3,403,"Access denied",null,null);
@@ -1251,7 +1252,7 @@ public final class HTTPDFileHandler {
      * not in separete servlet, because we need access to binary outstream
      * @throws IOException 
      */
-    private static void doURLProxy(final serverObjects args, final Properties conProp, final RequestHeader requestHeader, final OutputStream out) throws IOException {
+    private static void doURLProxy(final serverObjects args, final Properties conProp, final RequestHeader requestHeader, OutputStream out) throws IOException {
         final String httpVersion = conProp.getProperty(HeaderFramework.CONNECTION_PROP_HTTP_VER);
 		URL proxyurl = null;
 
@@ -1261,7 +1262,7 @@ public final class HTTPDFileHandler {
 		}
 		// set properties for proxy connection
    		final Properties prop = new Properties();
-		prop.setProperty(HeaderFramework.CONNECTION_PROP_HTTP_VER, HeaderFramework.HTTP_VERSION_1_0);
+		prop.setProperty(HeaderFramework.CONNECTION_PROP_HTTP_VER, HeaderFramework.HTTP_VERSION_1_1);
 		prop.setProperty(HeaderFramework.CONNECTION_PROP_HOST, proxyurl.getHost());
 		prop.setProperty(HeaderFramework.CONNECTION_PROP_PATH, proxyurl.getPath().replaceAll(" ", "%20"));
 		prop.setProperty(HeaderFramework.CONNECTION_PROP_REQUESTLINE, "PROXY");
@@ -1306,7 +1307,11 @@ public final class HTTPDFileHandler {
 		if (outgoingHeader.getContentType().startsWith("text/html")) {
 			StringWriter buffer = new StringWriter();
 
-			FileUtils.copy(in, buffer, Charset.forName("UTF-8"));
+			if (outgoingHeader.containsKey(HeaderFramework.TRANSFER_ENCODING)) {
+				FileUtils.copy(new ChunkedInputStream(in), buffer, Charset.forName("UTF-8"));
+			} else {
+				FileUtils.copy(in, buffer, Charset.forName("UTF-8"));
+			}
 
 			String sbuffer = buffer.toString();
 
@@ -1318,9 +1323,17 @@ public final class HTTPDFileHandler {
 			sbuffer = sbuffer.replaceAll("(href|src)=\"([^:\"]+)\"", "$1=\"/proxy.html?url=http://"+proxyurl.getHost()+directory+"/$2\"");
 			sbuffer = sbuffer.replaceAll("(href|src)='([^:\"]+)'", "$1='/proxy.html?url=http://"+proxyurl.getHost()+directory+"/$2'");
 			sbuffer = sbuffer.replaceAll("url\\(", "url(/proxy.html?url=http://"+proxyurl.getHost()+proxyurl.getPath());
-			outgoingHeader.put(HeaderFramework.CONTENT_LENGTH, Integer.toString(sbuffer.getBytes().length));
-    		HTTPDemon.sendRespondHeader(conProp, out, httpVersion, httpStatus, outgoingHeader);
-    		
+			
+			if (outgoingHeader.containsKey(HeaderFramework.TRANSFER_ENCODING)) {
+				HTTPDemon.sendRespondHeader(conProp, out, httpVersion, httpStatus, outgoingHeader);
+				
+				out = new ChunkedOutputStream(out);
+			} else {
+				outgoingHeader.put(HeaderFramework.CONTENT_LENGTH, Integer.toString(sbuffer.getBytes().length));
+				
+				HTTPDemon.sendRespondHeader(conProp, out, httpVersion, httpStatus, outgoingHeader);
+			}
+
 			out.write(sbuffer.getBytes("UTF-8"));
 		} else {
 			if (!outgoingHeader.containsKey(HeaderFramework.CONTENT_LENGTH))
