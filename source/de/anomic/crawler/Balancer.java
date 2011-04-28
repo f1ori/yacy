@@ -552,6 +552,10 @@ public class Balancer {
     	Log.logInfo("BALANCER", "re-fill of domain stacks; fileIndex.size() = " + this.urlFileIndex.size() + ", domainStacks.size = " + domainStacks.size() + ", collection time = " + (System.currentTimeMillis() - this.lastDomainStackFill) + " ms");
         this.domStackInitSize = this.domainStacks.size();
     }
+    
+    public void clearCaches() {
+    	this.double_push_check.clear();
+    }
 
     public List<Request> top(int count) {
     	final List<Request> cel = new ArrayList<Request>();

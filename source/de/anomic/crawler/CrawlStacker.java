@@ -336,7 +336,8 @@ public final class CrawlStacker {
      * @return null if successfull, a reason string if not successful
      */
     public String stackSimpleCrawl(final DigestURI url) {
-    	CrawlProfile pe = this.crawler.defaultSurrogateProfile;
+    	CrawlProfile pe = this.crawler.defaultAnnotationsProfile;
+    	nextQueue.noticeURL.clearCaches();
     	return stackCrawl(new Request(
                 peers.mySeed().hash.getBytes(),
                 url,

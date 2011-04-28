@@ -274,6 +274,13 @@ public class NoticedURL {
             }
     }
     
+    public void clearCaches() {
+        coreStack.clearCaches();
+        limitStack.clearCaches();
+        remoteStack.clearCaches();
+        noloadStack.clearCaches();
+    }
+    
     private Request pop(final Balancer balancer, final boolean delay, CrawlSwitchboard cs) throws IOException {
         // this is a filo - pop
         int s;

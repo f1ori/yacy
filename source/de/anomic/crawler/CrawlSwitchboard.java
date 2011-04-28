@@ -48,6 +48,7 @@ public final class CrawlSwitchboard {
     public static final String CRAWL_PROFILE_SNIPPET_LOCAL_MEDIA   = "snippetLocalMedia";
     public static final String CRAWL_PROFILE_SNIPPET_GLOBAL_MEDIA  = "snippetGlobalMedia";
     public static final String CRAWL_PROFILE_SURROGATE             = "surrogates";
+    public static final String CRAWL_PROFILE_ANNOTATIONS           = "annotatations";
     
     public static final String DBFILE_ACTIVE_CRAWL_PROFILES        = "crawlProfilesActive.heap";
     public static final String DBFILE_PASSIVE_CRAWL_PROFILES       = "crawlProfilesPassive.heap";
@@ -58,6 +59,7 @@ public final class CrawlSwitchboard {
     public static final long CRAWL_PROFILE_SNIPPET_LOCAL_MEDIA_RECRAWL_CYCLE = 60L * 24L * 30L;
     public static final long CRAWL_PROFILE_SNIPPET_GLOBAL_MEDIA_RECRAWL_CYCLE = 60L * 24L * 30L;
     public static final long CRAWL_PROFILE_SURROGATE_RECRAWL_CYCLE = 60L * 24L * 30L;
+    public static final long CRAWL_PROFILE_ANNOTATIONS_RECRAWL_CYCLE = 0; // recrawl immediately, as annotations might have change
     
     private final Log       log;
     private        Map<byte[], Map<String, String>>   profilesActiveCrawls, profilesPassiveCrawls;
@@ -66,6 +68,7 @@ public final class CrawlSwitchboard {
     public  CrawlProfile    defaultTextSnippetLocalProfile, defaultTextSnippetGlobalProfile;
     public  CrawlProfile    defaultMediaSnippetLocalProfile, defaultMediaSnippetGlobalProfile;
     public  CrawlProfile    defaultSurrogateProfile;
+    public  CrawlProfile    defaultAnnotationsProfile;
     private final File      queuesRoot;
     
     public CrawlSwitchboard(
@@ -179,6 +182,7 @@ public final class CrawlSwitchboard {
         this.defaultMediaSnippetLocalProfile = null;
         this.defaultMediaSnippetGlobalProfile = null;
         this.defaultSurrogateProfile = null;
+        this.defaultAnnotationsProfile = null;
         CrawlProfile profile;
         String name;
         try {
@@ -192,6 +196,7 @@ public final class CrawlSwitchboard {
                 if (name.equals(CRAWL_PROFILE_SNIPPET_LOCAL_MEDIA)) this.defaultMediaSnippetLocalProfile = profile;
                 if (name.equals(CRAWL_PROFILE_SNIPPET_GLOBAL_MEDIA)) this.defaultMediaSnippetGlobalProfile = profile;
                 if (name.equals(CRAWL_PROFILE_SURROGATE)) this.defaultSurrogateProfile = profile;
+                if (name.equals(CRAWL_PROFILE_ANNOTATIONS)) this.defaultAnnotationsProfile = profile;
             }
         } catch (final Exception e) {
             this.profilesActiveCrawls.clear();
@@ -202,6 +207,7 @@ public final class CrawlSwitchboard {
             this.defaultMediaSnippetLocalProfile = null;
             this.defaultMediaSnippetGlobalProfile = null;
             this.defaultSurrogateProfile = null;
+            this.defaultAnnotationsProfile = null;
         }
         
         if (this.defaultProxyProfile == null) {
@@ -253,6 +259,12 @@ public final class CrawlSwitchboard {
             this.defaultSurrogateProfile = new CrawlProfile(CRAWL_PROFILE_SURROGATE, null, CrawlProfile.MATCH_ALL, CrawlProfile.MATCH_NEVER, 0,
                     CrawlProfile.getRecrawlDate(CRAWL_PROFILE_SURROGATE_RECRAWL_CYCLE), -1, true, true, false, false, false, true, true, false, CrawlProfile.CacheStrategy.NOCACHE);
             this.profilesActiveCrawls.put(UTF8.getBytes(this.defaultSurrogateProfile.handle()), this.defaultSurrogateProfile);
+        }
+        if (this.defaultAnnotationsProfile == null) {
+            // generate new default entry for annotations parsing
+            this.defaultAnnotationsProfile = new CrawlProfile(CRAWL_PROFILE_ANNOTATIONS, null, CrawlProfile.MATCH_ALL, CrawlProfile.MATCH_NEVER, 0,
+                    CrawlProfile.getRecrawlDate(CRAWL_PROFILE_ANNOTATIONS_RECRAWL_CYCLE), -1, true, true, true, true, true, true, true, false, CrawlProfile.CacheStrategy.IFEXIST);
+            this.profilesActiveCrawls.put(UTF8.getBytes(this.defaultAnnotationsProfile.handle()), this.defaultAnnotationsProfile);
         }
     }
     
