@@ -1,0 +1,182 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<!-- This page is only XHTML 1.0 Transitional and not Strict because iframes are in use -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>YaCy '#[clientname]#': Integration of a Search Portal</title>
+    #%env/templates/metas.template%#
+  </head>
+  <body id="ConfigSkins" onload="document.getElementById('promoteSearchPageGreeting').focus()">
+    #%env/templates/header.template%#
+    #%env/templates/submenuPortalIntegration.template%#
+    <h2>Integration of a Search Portal</h2>
+    <p>
+      If you like to integrate YaCy as portal for your web pages, you may want to change icons and messages on the search page.
+      The search page may be customized. You can change the 'corporate identity'-images, the greeting line
+      and a link to a home page that is reached when the 'corporate identity'-images are clicked.
+      To change also colours and styles use the <a href="ConfigAppearance_p.html">Appearance Servlet</a> for different skins and languages.
+    </p>
+    <form action="ConfigPortal.html" method="post" enctype="multipart/form-data" id="ConfigPortal" accept-charset="UTF-8">
+      <fieldset>
+        <dl>
+          <dt>Greeting Line</dt>
+          <dd><input type="text" name="promoteSearchPageGreeting" id="promoteSearchPageGreeting" value="#[promoteSearchPageGreeting]#" size="60" /></dd>
+          
+          <dt>URL of Home Page</dt>
+          <dd><input type="text" name="promoteSearchPageGreeting.homepage" value="#[promoteSearchPageGreeting.homepage]#" size="60" /></dd>
+          
+          <dt>URL of a Small Corporate Image</dt>
+          <dd><input type="text" name="promoteSearchPageGreeting.smallImage" value="#[promoteSearchPageGreeting.smallImage]#" size="60" /></dd>
+          
+          <dt>URL of a Large Corporate Image</dt>
+          <dd><input type="text" name="promoteSearchPageGreeting.largeImage" value="#[promoteSearchPageGreeting.largeImage]#" size="60" /></dd>
+          
+          <dt>Enable Search for Everyone?</dt>
+          <dd>
+          <input type="radio" name="publicSearchpage" value="true" #(publicSearchpage)#::checked="checked"#(/publicSearchpage)# />Search is available for everyone&nbsp;
+          <input type="radio" name="publicSearchpage" value="false" #(publicSearchpage)#checked="checked"::#(/publicSearchpage)# />Only the administator is allowed to search
+          </dd>
+          
+          <dt>Show Navigation Bar on Search Page?</dt>
+          <dd>
+          <input type="radio" name="publicTopmenu" value="true" #(publicTopmenu)#::checked="checked"#(/publicTopmenu)# />Show Navigation Top-Menu&nbsp;
+          <input type="radio" name="publicTopmenu" value="false" #(publicTopmenu)#checked="checked"::#(/publicTopmenu)# />no link to YaCy Menu (admin must navigate to /Status.html manually)
+          </dd>
+          
+          <dt>Show Advanced Search Options on Search Page?</dt>
+          <dd>
+          <input type="radio" name="search.options" value="true" #(search.options)#::checked="checked"#(/search.options)# />Show Advanced Search Options on index.html&nbsp;
+          <input type="radio" name="search.options" value="false" #(search.options)#checked="checked"::#(/search.options)# />do not show Advanced Search
+          </dd>
+          
+          <dt>Snippet Fetch Strategy &amp; Link Verification</dt>
+          <dd>
+          <input type="radio" name="search.verify" value="nocache" #(search.verify.nocache)#::checked="checked"#(/search.verify.nocache)# onclick="document.getElementById('search_verify_delete').disabled=false;document.getElementById('search_verify_delete').checked=true;"/>NOCACHE: no use of web cache, load all snippets online<br/>
+          <input type="radio" name="search.verify" value="iffresh" #(search.verify.iffresh)#::checked="checked"#(/search.verify.iffresh)# onclick="document.getElementById('search_verify_delete').disabled=false;document.getElementById('search_verify_delete').checked=true;"/>IFFRESH: use the cache if the cache exists and is fresh otherwise load online<br/>
+          <input type="radio" name="search.verify" value="ifexist" #(search.verify.ifexist)#::checked="checked"#(/search.verify.ifexist)# onclick="document.getElementById('search_verify_delete').disabled=false;document.getElementById('search_verify_delete').checked=true;"/>IFEXIST: use the cache if the cache exist or load online<br/>
+          <input type="checkbox" name="search.verify.delete" id="search_verify_delete" value="true" #(search.verify.delete)#::checked="checked"#(/search.verify.delete)# />If verification fails, delete index reference<br/><br/>
+          <input type="radio" name="search.verify" value="cacheonly" #(search.verify.cacheonly)#::checked="checked"#(/search.verify.cacheonly)# onclick="document.getElementById('search_verify_delete').disabled=true;document.getElementById('search_verify_delete').checked=false;"/>CACHEONLY: never go online, use all content from cache. If no cache entry exist, consider content nevertheless as available and show result without snippet<br/>
+          <input type="radio" name="search.verify" value="false" #(search.verify.false)#::checked="checked"#(/search.verify.false)# onclick="document.getElementById('search_verify_delete').disabled=true;document.getElementById('search_verify_delete').checked=false;"/>FALSE: no link verification and not snippet generation: all search results are valid without verification
+          </dd>
+
+          <dt>Show Information Links for each Search Result Entry</dt>
+          <dd>
+          <input type="checkbox" name="search.result.show.date" value="true" #(search.result.show.date)#::checked="checked"#(/search.result.show.date)# />Date&nbsp;
+          <input type="checkbox" name="search.result.show.size" value="true" #(search.result.show.size)#::checked="checked"#(/search.result.show.size)# />Size&nbsp;
+          <input type="checkbox" name="search.result.show.metadata" value="true" #(search.result.show.metadata)#::checked="checked"#(/search.result.show.metadata)# />Metadata&nbsp;
+          <input type="checkbox" name="search.result.show.parser" value="true" #(search.result.show.parser)#::checked="checked"#(/search.result.show.parser)# />Parser&nbsp;
+          <input type="checkbox" name="search.result.show.pictures" value="true" #(search.result.show.pictures)#::checked="checked"#(/search.result.show.pictures)# />Pictures
+          </dd>
+          
+          <dt>Show Navigation on Side-Bar</dt>
+          <dd>
+          <input type="checkbox" name="search.navigation.hosts" value="true" #(search.navigation.hosts)#::checked="checked"#(/search.navigation.hosts)# />Host Navigation&nbsp;
+          <input type="checkbox" name="search.navigation.authors" value="true" #(search.navigation.authors)#::checked="checked"#(/search.navigation.authors)# />Author Navigation&nbsp;
+          <input type="checkbox" name="search.navigation.namespace" value="true" #(search.navigation.namespace)#::checked="checked"#(/search.navigation.namespace)# />Wiki Name-Space Navigation&nbsp;
+          <input type="checkbox" name="search.navigation.topics" value="true" #(search.navigation.topics)#::checked="checked"#(/search.navigation.topics)# />Topics (Tag-Cloud) Navigation&nbsp;
+          </dd>
+          
+          <dt>Default Pop-Up Page</dt>
+          <dd>
+          <input type="radio" name="popup" value="status" #(popupStatus)#::checked="checked"#(/popupStatus)# />Status Page&nbsp;
+          <input type="radio" name="popup" value="front" #(popupFront)#::checked="checked"#(/popupFront)# />Search Front Page&nbsp;
+          <input type="radio" name="popup" value="search" #(popupSearch)#::checked="checked"#(/popupSearch)# />Search Page (small header)&nbsp;
+          <input type="radio" name="popup" value="interactive" #(popupInteractive)#::checked="checked"#(/popupInteractive)# />Interactive Search Page&nbsp;
+          </dd>
+          
+          <dt>Default index.html Page (by forwarder)</dt>
+          <dd><input type="text" name="indexForward" value="#[indexForward]#" size="60" /></dd>
+          
+          <dt>Target for Click on Search Results</dt>
+          <dd>
+          <select name="target">
+            <option value="_blank" #(selected_blank)#::selected="selected"#(/selected_blank)#>"_blank" (new window)</option>
+            <option value="_self" #(selected_self)#::selected="selected"#(/selected_self)#>"_self" (same window)</option>
+            <option value="_parent" #(selected_parent)#::selected="selected"#(/selected_parent)#>"_parent" (the parent frame of a frameset)</option>
+            <option value="_top" #(selected_top)#::selected="selected"#(/selected_top)#>"_top" (top of all frames)</option>
+            <option value="searchresult" #(selected_searchresult)#::selected="selected"#(/selected_searchresult)#>"searchresult" (a default custom page name for search results)</option>
+          </select>
+          </dd>
+          
+          <dt>&nbsp;</dt>
+          <dd>
+            <input type="submit" name="searchpage_set" value="Change Search Page" />&nbsp;&nbsp;
+            <input type="submit" name="searchpage_default" value="Set to Default Values" />
+          </dd>
+        </dl>
+      </fieldset>
+    </form>
+    
+    <h3>
+      The search page can be integrated in your own web pages with an iframe. Simply use the following code:
+    </h3>
+    <fieldset><pre>
+      &lt;iframe name=&quot;target&quot;
+       src=&quot;http://#[myaddress]#/index.html?display=2&amp;resource=local&quot;
+       width=&quot;100%&quot;
+       height=&quot;410&quot;
+       frameborder=&quot;0&quot;
+       scrolling=&quot;auto&quot;
+       id=&quot;target&quot;&gt; 
+      &lt;/iframe&gt;  
+    </pre></fieldset>
+    This would look like:
+    <iframe name="target"
+       src="http://#[myaddress]#/index.html?display=2&amp;resource=local"
+       width="100%"
+       height="410"
+       frameborder="0"
+       scrolling="auto"
+       id="target">
+      </iframe>
+    
+    <h3>
+      For a search page with a small header, use this code:
+    </h3>
+    <fieldset><pre>
+      &lt;iframe name=&quot;target2&quot;
+       src=&quot;http://#[myaddress]#/yacysearch.html?display=2&amp;resource=local&quot;
+       width=&quot;100%&quot;
+       height=&quot;180&quot;
+       frameborder=&quot;0&quot;
+       scrolling=&quot;auto&quot;
+       id=&quot;target2&quot;&gt; 
+      &lt;/iframe&gt;  
+    </pre></fieldset>
+    This would look like:
+    <iframe name="target2"
+       src="http://#[myaddress]#/yacysearch.html?display=2&amp;resource=local"
+       width="100%"
+       height="180"
+       frameborder="0"
+       scrolling="auto"
+       id="target2"
+       onfocus="removeFocus(this);">
+      </iframe>
+      
+    <h3>
+      A third option is the interactive search. Use this code:
+    </h3>
+    <fieldset><pre>
+      &lt;iframe name="target3"
+       src=&quot;http://#[myaddress]#/yacyinteractive.html?display=2&quot;
+       width=&quot;100%&quot;
+       height=&quot;180&quot;
+       frameborder=&quot;0&quot;
+       scrolling=&quot;auto&quot;
+       id=&quot;target3&quot;&gt; 
+      &lt;/iframe&gt;  
+    </pre></fieldset>
+    This would look like:
+    <iframe name="target3"
+       src="http://#[myaddress]#/yacyinteractive.html?display=2"
+       width="100%"
+       height="180"
+       frameborder="0"
+       scrolling="auto"
+       id="target3"
+       onfocus="removeFocus(this);">
+      </iframe>
+    
+    #%env/templates/footer.template%#
+  </body>
+</html>

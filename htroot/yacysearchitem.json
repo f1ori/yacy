@@ -1,0 +1,32 @@
+#(content)#::#(nl)#::    ,#(/nl)#
+    {
+      "title": "#[title-json]#",
+      "link": "#[link]#",
+      "code": "#[code]#",
+      "description": "#[description-json]#",
+      "pubDate": "#[date822]#",
+      "size": "#[size]#",
+      "sizename": "#[sizename]#",
+      "guid": "#[urlhash]#",
+      "faviconCode": "#[faviconCode]#",
+      "host": "#[host]#",
+      "path": "#[path]#",
+      "file": "#[file]#",
+      "urlhash": "#[urlhash]#",
+      "ranking": "#[ranking]#"
+    }::#(item)#::#(nl)#::    ,#(/nl)#
+    {
+      "title": "#[name]#",
+      "icon": "/ViewImage.png?maxwidth=96&amp;maxheight=96&amp;code=#[code]#",
+      "image": "#[href]#",
+      "cache": "#[hrefCache]#",
+      "url": "#[source]#",
+      "urlhash": "#[urlhash]#",
+      "host": "#[sourcedom]#",
+      "width": "#[width]#",
+      "height": "#[height]#"
+    }#(/item)#::
+::
+::
+::
+#(/content)#

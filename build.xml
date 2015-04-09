@@ -1,0 +1,802 @@
+<project name="YaCy" default="all" basedir=".">
+  <description>
+    YaCy - a Peer to Peer Web Search Engine
+  </description>
+
+  <!-- 
+# THIS IS THE YACY BUILD SCRIPT
+# YOU CAN USE IT TO COMPILE YOUR OWN RELEASE
+# THE TARGET OF THE COMPILATION CAN BE FOUND
+# IN THE 'RELEASE' DIRECTORY AFTERWARDS
+# YOU NEED APACHE ANT TO USE THIS SCRIPT
+# ==========================================
+# This Software is Copyrighted
+# (C) by Michael Peter Christen; mc@yacy.net
+# first published on http://yacy.net
+# Frankfurt, Germany, 2005-2009
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+
+  <!-- defining the timestamp format -->
+  <tstamp>
+    <format property="REPL_DATE_FORMAT" pattern="yyyymmdd" />
+  </tstamp>
+
+  <!-- defining all needed directory names -->
+  <property name="yacyroot" location="."/>
+  <property name="addon" location="addon"/>
+  <property name="src" location="source"/>
+  <property name="data" location="DATA"/>
+  <property name="lib" location="lib"/>
+  <property name="libt" location="libt"/>
+  <property name="libbuild" location="libbuild"/>
+  <property name="build" location="classes"/>
+  <property name="javadoc" location="api"/>
+  <property name="htroot" location="htroot"/>
+  <property name="test" location="test"/>
+  <property name="langstats" location="langstats"/>
+  <property name="locales" location="locales"/>
+  <property name="skins" location="skins"/>
+  <property name="ranking" location="ranking"/>
+  <property name="release" location="RELEASE"/>
+  <property name="htdocsWWW" location="${data}/HTDOCS/www"/>
+  <property name="release_main" location="${release}/MAIN"/>
+  <property name="release_windows" location="${release}/WINDOWS"/>
+  <property name="release_mac" location="${release}/MAC"/>
+  <property name="svnEntriesFile" location=".svn/entries"/>
+  <property name="defaults" location="defaults"/>
+  <!-- variables for installonlinux target-->
+  <property name="DESTDIR" value="DESTDIR"/>
+  <property name="PKGMANAGER" value="false"/>
+  <property name="RESTARTCMD" value="/etc/init.d/yacy restart"/>
+
+  <!-- determining if the .svn directory exists -->
+  <condition property="svnEntriesFileExists">
+    <available file="${svnEntriesFile}" />
+  </condition>
+
+  <!-- 
+    if the .svn directory exists we try to determine the real
+    svn revision number of the working base now
+-->
+
+  <target name="buildSvnRevNr">
+    <delete file="${libbuild}/svnRevNr.jar" failonerror="false" />
+    <javac srcdir="${libbuild}/svnRevNr" />
+    <jar destfile="${libbuild}/svnRevNr.jar" basedir="${libbuild}/svnRevNr">
+      <manifest>
+        <attribute name="Main-Class" value="svnRevNrParser"/>
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="determineRevisionNr" if="svnEntriesFileExists" depends="buildSvnRevNr">
+    <!-- define a custom ant task to read the revision number from file -->
+    <taskdef resource="svnRevNrParser.properties" classpath="${libbuild}/svnRevNr.jar"/>
+
+    <!-- determine the revision number -->
+    <echo message="Trying to read Revision number from file ${svnEntriesFile}"/>
+    <svnrevnr file="${svnEntriesFile}" property="baseRevisionNr"/>
+
+    <!-- replacing the old with the new revision number -->
+    <copy file="build.properties" tofile="build.properties.new">
+      <filterchain>
+        <tokenfilter>
+          <replaceregex pattern="^releaseNr=(.*)"
+                        replace="releaseNr=$Revision: ${baseRevisionNr} $" />
+        </tokenfilter>
+      </filterchain>
+    </copy>
+    <delete file="build.properties"/>
+    <move file="build.properties.new" tofile="build.properties"/>
+  </target>
+
+  <!-- reading the build properties from file -->
+  <target name="readBuildProperties" depends="determineRevisionNr">
+    <!-- loading some property values from file -->
+    <loadproperties srcFile="build.properties">
+      <filterchain>
+        <tokenfilter>
+          <replaceregex pattern="^releaseNr=\$Revision:\s(.*)\s\$"
+                        replace="releaseNr=\1"/>
+        </tokenfilter>
+      </filterchain>
+    </loadproperties>
+  </target>
+
+  <!-- initializing all needed variables -->
+  <target name="init" depends="readBuildProperties">
+    <mkdir dir="${build}/de/anomic/crawler"/>
+    <mkdir dir="${build}/de/anomic/data"/>
+    <mkdir dir="${build}/de/anomic/htmlFilter"/>
+    <mkdir dir="${build}/de/anomic/http"/>
+    <mkdir dir="${build}/de/anomic/kelondro"/>
+    <mkdir dir="${build}/de/anomic/net"/>
+    <mkdir dir="${build}/de/anomic/index"/>
+    <mkdir dir="${build}/de/anomic/plasma"/>
+    <mkdir dir="${build}/de/anomic/plasma/parser"/>
+    <mkdir dir="${build}/de/anomic/server"/>
+    <mkdir dir="${build}/de/anomic/tools"/>
+    <mkdir dir="${build}/de/anomic/ymage"/>
+    <mkdir dir="${build}/de/anomic/yacy"/>
+    <mkdir dir="${build}/de/anomic/yacy/seedUpload"/>
+    <mkdir dir="${data}"/>
+    <mkdir dir="${release}"/>
+
+    <!-- YaCy Release Date -->
+    <filter token="REPL_DATE" value="${DSTAMP}"/>
+    <filter token="REPL_RELEASE" value="${stdReleaseFile}"/>
+
+    <!-- YaCy Release Version number -->
+    <echo message="YaCy Version number: ${releaseVersion}" />
+    <filter token="REPL_VERSION" value="${releaseVersion}" />
+
+    <!-- YaCy SVN Revision number -->
+    <echo message="YaCy Revision number: ${releaseNr}" />
+    <filter token="REPL_REVISION_NR" value="${releaseNr}"/>
+
+    <!-- YaCy root directory -->
+    <filter token="REPL_YACY_ROOT_DIR" value="${yacyroot}"/>
+    <filter token="REPL_PKGMANAGER" value="${PKGMANAGER}"/>
+    <filter token="REPL_RESTARTCMD" value="${RESTARTCMD}"/>
+
+    <!-- apply replacments -->
+    <delete file="${build}/de/anomic/yacy/yacyBuildProperties.java" failonerror="false"/>
+    <copy file="${src}/de/anomic/yacy/yacyBuildProperties.java" tofile="${build}/de/anomic/yacy/yacyBuildProperties.java" overwrite="true" filtering="true" />
+    
+    <!-- copy log4j config file -->
+    <copy file="${src}/log4j.properties" tofile="${build}/log4j.properties" overwrite="true" filtering="true" />
+
+  </target>
+
+  <target name="javadoc" depends="init" description="make javadoc for YaCy core">
+    <javadoc destdir="${javadoc}"
+      windowtitle="YaCy API"
+      encoding="UTF-8"
+      charset="UTF-8"
+      access="private">
+      <fileset dir="${src}">
+        <include name="**/*.java"/>
+      </fileset>
+    </javadoc>
+  </target>
+	
+    <!-- define the classpath that should be used for compiling -->
+    <!-- when changing paths here, please also update the paths in /addon/YaCy.app/Contents/Info.plist -->
+    <path id="project.class.path">
+        <pathelement location="${build}" />
+        <pathelement location="${htroot}" />
+    	<pathelement location="${lib}/activation.jar" />
+        <pathelement location="${lib}/apache-mime4j-0.6.jar" />
+        <pathelement location="${lib}/apache-solr-solrj-3.1.0.jar" />
+    	<pathelement location="${lib}/bcmail-jdk15-145.jar" />
+    	<pathelement location="${lib}/bcprov-jdk15-145.jar" />
+    	<pathelement location="${lib}/bzip2.jar" />
+    	<pathelement location="${lib}/commons-codec-1.4.jar" />
+    	<pathelement location="${lib}/commons-fileupload-1.2.2.jar" />
+    	<pathelement location="${lib}/commons-io-1.4.jar" />
+    	<pathelement location="${lib}/commons-jxpath-1.3.jar" />
+    	<pathelement location="${lib}/commons-logging-1.1.1.jar" />
+    	<pathelement location="${lib}/fontbox-1.2.1.jar" />
+        <pathelement location="${lib}/httpclient-4.1.jar" />
+        <pathelement location="${lib}/httpcore-4.1.jar" />
+        <pathelement location="${lib}/httpmime-4.1.jar" />
+        <pathelement location="${lib}/icu4j-core.jar" />
+        <pathelement location="${lib}/J7Zip-modified.jar" />
+        <pathelement location="${lib}/jakarta-oro-2.0.8.jar" />
+    	<pathelement location="${lib}/jcifs-1.3.15.jar" />
+    	<pathelement location="${lib}/jsch-0.1.42.jar" />
+    	<pathelement location="${lib}/json-simple-1.1.jar" />
+    	<pathelement location="${lib}/log4j-1.2.16.jar" />
+    	<pathelement location="${lib}/metadata-extractor-2.4.0-beta-1.jar" />
+    	<pathelement location="${lib}/mysql-connector-java-5.1.12-bin.jar" />
+        <pathelement location="${lib}/pdfbox-1.2.1.jar" />
+    	<pathelement location="${lib}/poi-3.6-20091214.jar" />
+    	<pathelement location="${lib}/poi-scratchpad-3.6-20091214.jar" />
+        <pathelement location="${lib}/servlet-api.jar" />
+        <pathelement location="${lib}/slf4j-api-1.5.5.jar" />
+        <pathelement location="${lib}/slf4j-jdk14-1.5.5.jar" />
+    	<pathelement location="${lib}/webcat-0.1-swf.jar" />
+    	<pathelement location="${lib}/xerces.jar" />
+    </path>
+	
+  <target name="compile-core" depends="init" description="compile YaCy core">
+  	
+    <!-- compile yacyBuildProperties.java -->
+    <javac srcdir="${build}" destdir="${build}" sourcepath="${src}"
+           debug="true" debuglevel="lines,vars,source"
+           includes="de/anomic/yacy/yacyBuildProperties.java"
+           source="${javacSource}" target="${javacTarget}">
+      <classpath refid="project.class.path" />
+      <compilerarg value="-Xlint"/>
+    </javac>
+    <delete file="${build}/BuildProperties.java" />
+
+    <!-- compile the core sources -->
+    <javac srcdir="${src}/" destdir="${build}"
+           debug="true" debuglevel="lines,vars,source"
+           excludes="de/anomic/yacy/yacyBuildProperties.java"
+           source="${javacSource}" target="${javacTarget}">
+      <classpath refid="project.class.path" />
+      <compilerarg value="-Xlint"/>
+    </javac>
+  	
+  	<!-- make the jacycore jar -->
+    <jar destfile="${lib}/yacycore.jar" basedir="${build}/">
+      <manifest>
+        <attribute name="Main-Class" value="yacy"/>
+      </manifest>
+    </jar>
+
+  </target>
+  
+  <target name="compile-cora" depends="init" description="compile YaCy cora component">
+    <!-- compile the cora sources -->
+    <javac srcdir="${src}/net/yacy/cora/" destdir="${build}/"
+           debug="true" debuglevel="lines,vars,source"
+           source="${javacSource}" target="${javacTarget}">
+      <classpath refid="project.class.path" />
+      <compilerarg value="-Xlint"/>
+    </javac>
+  	
+  	<!-- make yacy-cora.jar -->
+    <jar destfile="${lib}/yacy-cora.jar" includes="**/net/yacy/cora/**" basedir="${build}/"></jar>
+
+  </target>
+
+  
+  <target name="compile" depends="compile-core" description="compile YaCy core and YaCy servlets">
+    <!-- defining the classpath that should be used for compiling -->
+    <path id="project.class.path">
+      <pathelement location="${build}" />
+      <pathelement location="${htroot}" />
+    </path>
+
+    <!-- compile htroot, htroot/yacy and htroot/htdocsdefault -->
+    <javac srcdir="${htroot}/"
+    	   excludes="processing/**"
+           source="${javacSource}" target="${javacTarget}"
+           debug="true" debuglevel="lines,vars,source">
+      <classpath refid="project.class.path" />
+      <compilerarg value="-Xlint"/>
+    </javac>
+  </target>
+
+  <target name="all" depends="compile">
+  </target>
+
+  <target name="copyMain4Dist" depends="compile">
+  	<!-- copy all libs -->
+  	    <copy todir="${release_main}/lib">
+  	      <fileset dir="${lib}" 
+  	               includes="**/*"/>
+  	    </copy>
+  	
+  	<!-- copy build libs -->
+  	    <copy todir="${release_main}/libbuild">
+  	      <fileset dir="${libbuild}" 
+  	               includes="**/*"/>
+  	    </copy>
+
+    <!-- copy configuration files -->
+    <copy todir="${release_main}">
+      <fileset dir=".">
+        <include name="yacy.logging"/>
+        <include name="yacy.yellow"/>
+        <include name="yacy.badwords.example"/>
+        <include name="yacy.stopwords"/>
+        <include name="yacy.parser"/>
+        <include name="httpd.mime"/>
+      </fileset>
+    </copy>
+
+  	<!-- copy defaults -->
+    <copy todir="${release_main}/defaults">
+      <fileset dir="${defaults}" 
+               includes="**/*"/>
+    </copy>
+
+  	<!-- copy Unix wrappers -->
+    <copy todir="${release_main}">
+      <fileset dir=".">
+        <include name="startYACY.sh"/>
+        <include name="stopYACY.sh"/>
+        <include name="killYACY.sh"/>
+        <include name="updateYACY.sh"/>
+        <include name="restart.sh"/>
+        <include name="reconfigureYACY.sh"/>
+        <include name="startYACY.command"/>
+        <include name="stopYACY.command"/>
+      </fileset>
+    </copy>
+
+    <!-- copy other wrappers -->
+    <copy todir="${release_main}">
+      <fileset dir=".">
+        <include name="startYACY.bat"/>
+        <include name="startYACY_debug.bat"/>
+        <include name="stopYACY.bat"/>
+      	<include name="getWin32MaxHeap.bat"/>
+      </fileset>
+    </copy>
+
+    <!-- copy locales  -->
+    <copy todir="${release_main}/locales">
+      <fileset dir="${locales}">
+        <include name="*"/>
+      </fileset>
+    </copy>
+
+    <!-- copy skins  -->
+    <copy todir="${release_main}/skins">
+      <fileset dir="${skins}">
+        <include name="*"/>
+      </fileset>
+    </copy>
+
+    <!-- copy language statistics files -->
+    <copy todir="${release_main}/langstats">
+      <fileset dir="${langstats}">
+        <include name="*"/>
+      </fileset>
+    </copy>
+
+    <!-- copy documentation -->
+    <copy todir="${release_main}">
+      <fileset dir=".">
+        <include name="readme.txt"/>
+        <include name="gpl.txt"/>
+        <include name="ChangeLog"/>
+      	<include name="AUTHORS"/>
+      	<include name="COPYRIGHT"/>
+      	<include name="NOTICE"/>
+      </fileset>
+    </copy>
+
+    <!-- copy source code -->
+    <copy todir="${release_main}/source">
+      <fileset dir="${src}">
+        <include name="**/*.*"/>
+      </fileset>
+    </copy>
+
+    <!-- copy server pages -->
+    <copy todir="${release_main}/htroot">
+      <fileset dir="${htroot}">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+
+    <!-- copy add-on's -->
+    <copy todir="${release_main}/addon">
+      <fileset dir="${addon}">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+
+    <!-- copy ranking files -->
+    <copy todir="${release_main}/ranking">
+      <fileset dir="${ranking}">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+
+    <!-- copy development tools -->
+    <copy todir="${release_main}">
+      <fileset dir=".">
+        <include name="build.xml"/>
+        <include name="build.properties"/>
+      </fileset>
+    </copy>
+  	
+    <!-- copy searchtest -->
+    <copy todir="${release_main}/bin">
+      <fileset dir="bin">
+        <include name="apicall.sh"/>
+        <include name="clearall.sh"/>
+        <include name="clearcache.sh"/>
+        <include name="clearindex.sh"/>
+        <include name="down.sh"/>
+        <include name="importmediawiki.sh"/>
+        <include name="importOAIList.sh"/>
+        <include name="importurllist.sh"/>
+        <include name="localsearch.sh"/>
+        <include name="searchtest*"/>
+        <include name="surrogateCleanOut.sh"/>
+        <include name="surrogateMVin.sh"/>
+        <include name="surrogateMVtmp.sh"/>
+        <include name="surrogateRefeed.sh"/>
+        <include name="up.sh"/>
+      </fileset>
+    </copy>
+
+  </target>
+
+  <!-- run unittests-->
+  <target name="compileTest" depends="compile" description="run unittests">
+	  <javac srcdir="${test}" destdir="${test}"
+           debug="true" debuglevel="lines,vars,source"
+           source="${javacSource}" target="${javacTarget}">
+      <classpath>
+        <pathelement location="${build}"/>
+        <pathelement location="${htroot}"/>
+	<pathelement location="${libt}/junit-4.7.jar" />
+        <fileset dir="${lib}" includes="**/*.jar" />
+      </classpath>
+      <compilerarg value="-Xlint"/>
+    </javac>
+  </target>
+
+  <target name="test" depends="compileTest" description="run some unittests">
+    <junit printsummary="yes" haltonfailure="no">
+      <formatter type="plain"/>
+      <batchtest>
+        <fileset dir="${test}">
+	  <include name="**/*Test*.java"/>
+        </fileset>
+      </batchtest>
+      <classpath>
+        <pathelement location="${test}"/>
+        <pathelement location="${build}"/>
+        <pathelement location="${htroot}"/>
+	<pathelement location="${libt}/junit-4.7.jar" />
+        <fileset dir="${lib}" includes="**/*.jar" />
+      </classpath>
+    </junit>
+  </target>
+
+  <!-- ======================================================================================================= 
+       making a release file for yacy 
+       ======================================================================================================= -->
+
+  <target name="dist" depends="copyMain4Dist" description="make for standard YaCy">
+    <tar destfile="${release}/${stdReleaseFile}" compression="gzip" defaultexcludes="yes" longfile="fail">
+
+      <!-- packing all files into a gzipped tar -->
+      <tarfileset dir="${release_main}" prefix="${releaseFileParentDir}/" dirmode="${accessRightsDir}" mode="${accessRightsExecutable}">
+      	<include name="**/*.sh"/>
+      	<include name="**/*.command"/>
+      </tarfileset>
+      <tarfileset dir="${release_main}" prefix="${releaseFileParentDir}/" dirmode="${accessRightsDir}" mode="${accessRightsFile}" >
+        <include name="**/*"/>
+        <exclude name="**/*.sh"/>
+        <exclude name="**/*.command"/>
+      </tarfileset>
+    </tar>
+
+    <delete dir="${release_main}"/>
+    <delete dir="${release_windows}" failonerror="false" />
+    <delete dir="${release}/SPECS" failonerror="false" />
+  </target>
+
+  <!-- make clean -->
+  <target name="clean" description="make clean">
+    <delete dir="${release_main}" failonerror="false"/>
+    <delete file="${build}/de/anomic/yacy/yacyBuildProperties.java" failonerror="false"/>
+    <delete file="${build}/log4j.properties" failonerror="false"/>
+    <delete file="${lib}/yacycore.jar" failonerror="false"/>
+    <delete file="${lib}/svnRevNr.jar" failonerror="false"/>
+    <delete file="${libbuild}/svnRevNr.jar" failonerror="false"/>
+    <delete failonerror="false">
+      <fileset dir="${src}" includes="**/*.class" />
+      <fileset dir="${build}" includes="**/*.class" />
+      <fileset dir="${htroot}" includes="**/*.class" />
+      <fileset dir="test/" includes="**/*.class" />
+      <fileset dir="${libbuild}/svnRevNr" includes="**/*.class" />
+      <fileset dir="." includes="TEST-*" />
+    </delete>
+  </target>
+
+  <target name="installonlinux">
+
+    <!-- copy configuration files -->
+    <copy todir="${DESTDIR}/usr/share/yacy">
+      <fileset dir=".">
+        <include name="yacy.logging"/>
+        <include name="yacy.yellow"/>
+        <include name="yacy.badwords.example"/>
+        <include name="yacy.stopwords"/>
+        <include name="yacy.parser"/>
+        <include name="httpd.mime"/>
+      </fileset>
+    </copy>
+
+  	<!-- copy defaults -->
+	<copy todir="${DESTDIR}/usr/share/yacy/defaults">
+  	      <fileset dir="${defaults}" 
+  	               includes="**/*"/>
+  	    </copy>
+
+    <!-- copy locales  -->
+    <copy todir="${DESTDIR}/usr/share/yacy/locales">
+      <fileset dir="${locales}">
+        <include name="*"/>
+      </fileset>
+    </copy>
+
+    <!-- copy skins  -->
+    <copy todir="${DESTDIR}/usr/share/yacy/skins">
+      <fileset dir="${skins}">
+        <include name="*"/>
+      </fileset>
+    </copy>
+
+    <!-- copy language statistics files -->
+    <copy todir="${DESTDIR}/usr/share/yacy/langstats">
+      <fileset dir="${langstats}">
+        <include name="*"/>
+      </fileset>
+    </copy>
+
+    <!-- copy shell scripts from bin/ -->
+    <!-- i'm not sure, if this is consistent with the debian policy -->
+    <!-- but for /usr/bin or /usr/lib we need an extra environment variable -->
+    <copy todir="${DESTDIR}/usr/share/yacy/bin">
+      <fileset dir="bin/">
+        <include name="*"/>
+      </fileset>
+    </copy>
+    <chmod dir="${DESTDIR}/usr/share/yacy/bin/" perm="755" includes="*"/>
+
+    <!-- copy documentation -->
+    <copy todir="${DESTDIR}/usr/share/doc/yacy">
+      <fileset dir=".">
+        <include name="readme.txt"/>
+        <include name="ChangeLog"/>
+      	<include name="AUTHORS"/>
+      	<include name="COPYRIGHT"/>
+      	<include name="NOTICE"/>
+      </fileset>
+    </copy>
+
+    <!-- copy server pages -->
+    <copy todir="${DESTDIR}/usr/share/yacy/htroot">
+      <fileset dir="${htroot}">
+        <include name="**/*"/>
+        <exclude name="yacy/seedUpload/**"/>
+      </fileset>
+      <fileset dir="${htroot}">
+        <include name="yacy/seedUpload/yacySeedUploadFile.html"/>
+        <include name="yacy/seedUpload/yacySeedUploadFtp.html"/>
+      </fileset>
+    </copy>
+
+    <!-- copy ranking files -->
+    <copy todir="${DESTDIR}/usr/share/yacy/ranking">
+      <fileset dir="${ranking}">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+
+    <!-- prepare /var/lib/yacy -->
+    <mkdir dir="${DESTDIR}/var/lib/yacy" />
+    <mkdir dir="${DESTDIR}/var/lib/yacy/LOG" />
+    <mkdir dir="${DESTDIR}/var/lib/yacy/SETTINGS" />
+    <mkdir dir="${DESTDIR}/etc" />
+    <mkdir dir="${DESTDIR}/var/log" />
+    <symlink link="${DESTDIR}/usr/share/yacy/DATA"
+	    resource="../../../var/lib/yacy"/>
+    <symlink link="${DESTDIR}/etc/yacy"
+	    resource="../var/lib/yacy/SETTINGS"/>
+    <symlink link="${DESTDIR}/var/log/yacy"
+	    resource="../lib/yacy/LOG"/>
+
+  </target>
+
+  <!-- run YaCy (needed for NetBeans4) -->
+  <target name="run" description="Run YaCy">
+    <!-- debug options:
+     java -Xrunhprof:help
+     Hprof usage: -Xrunhprof[:help]|[:<option>=<value>, ...]
+
+     Option Name and Value  Description                Default
+     _____________________  ___________                _______
+     heap=dump|sites|all    heap profiling             all
+     cpu=samples|times|old  CPU usage                  off
+     monitor=y|n            monitor contention         n
+     format=a|b             ascii or binary output     a
+     file=<file>            write data to file         java.hprof(.txt for ascii)
+     net=<host>:<port>      send data over a socket    write to file
+     depth=<size>           stack trace depth          4
+     cutoff=<value>         output cutoff point        0.0001
+     lineno=y|n             line number in traces?     y
+     thread=y|n             thread in traces?          n
+     doe=y|n                dump on exit?              y
+     gc_okay=y|n            GC okay during sampling    y
+
+     Example: java -Xrunhprof:cpu=samples,file=log.txt,depth=3 FooClass
+
+     Note: format=b cannot be used with cpu=old|times
+-->
+    <java classname="net.yacy.yacy" fork="yes">
+      <classpath>
+        <pathelement location="${build}"/>
+        <pathelement location="${htroot}"/>
+        <pathelement location="${lib}" />
+        <fileset dir="${lib}" includes="**/*.jar" />
+      </classpath>
+      <!--<arg value="-Xrunhprof"/>-->
+      <arg line="-start"/>
+      <!-- <arg line="-migratewords"/>-->
+      <!-- <arg line="-start ${user.dir}"/>-->
+    </java>
+  </target>
+
+  <!-- run a single file (selected in NetBeans4) -->
+  <target name="run-single" depends="compile" description="Run Single File">
+    <fail unless="classname">Must set property 'classname'</fail>
+    <java classname="net.yacy.yacy" fork="yes">
+      <classpath refid="run.classpath"/>
+      <classpath>
+        <pathelement location="${build}"/>
+        <pathelement location="${htroot}"/>
+        <pathelement location="${lib}" />
+        <fileset dir="${lib}" includes="**/*.jar" />
+      </classpath>
+      <arg line=""/>
+    </java>
+  </target>
+
+  <!-- run YaCy with remote debugging enabled on port 8000 -->
+  <target name="debug" description="Debug YaCy">
+    <java classname="net.yacy.yacy" fork="yes">
+      <classpath>
+        <pathelement location="${build}"/>
+        <pathelement location="${htroot}"/>
+        <pathelement location="${lib}" />
+        <fileset dir="${lib}" includes="**/*.jar" />
+      </classpath>
+      <arg line="-start"/>
+      <jvmarg line="-Xdebug"/>
+      <jvmarg line="-Xnoagent"/>
+      <jvmarg line="-Djava.compiler=none"/>
+      <jvmarg line="-Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n"/>
+    </java>
+  </target>
+
+  <!-- stop YaCy again -->
+  <target name="stop" description="Stop YaCy">
+    <java classname="net.yacy.yacy" fork="yes">
+      <classpath>
+        <pathelement location="${build}"/>
+        <pathelement location="${htroot}"/>
+        <pathelement location="${lib}" />
+        <fileset dir="${lib}" includes="**/*.jar" />
+      </classpath>
+      <arg line="-stop"/>
+    </java>
+  </target>
+
+
+  <!-- create the html-documentation from javadoc  -->
+  <target name="create-doc" description="Create the javadoc-HTML-Pages">
+    <javadoc destdir="doc/api"
+             author="true"
+             version="true"
+             use="false"
+             encoding="iso-8859-1"
+             windowtitle="YaCy API Documentation">
+      <classpath>
+        <fileset dir="${lib}">
+          <include name="**/*.jar"/>
+        </fileset>
+        <pathelement location="${build}"/>
+      </classpath>
+      <fileset dir="source" defaultexcludes="yes">
+        <include name="**/*.java" />
+      </fileset>
+      <fileset dir="htroot" defaultexcludes="yes">
+        <include name="**/*.java" />
+      </fileset>
+    </javadoc>
+  </target>
+
+  <target name="rpm" depends="all" description="Creates the main rpm-package and another for lib">
+    <mkdir dir="${release}/RPMS/noarch" />
+    <mkdir dir="${release}/BUILD" />
+    <copy file="yacy-svn-4.spec" tofile="${release}/SPECS/yacy-svn.spec" overwrite="true" filtering="true" />
+
+    <rpm specFile="yacy-svn.spec" topDir="${release}" />
+
+    <move file="${release}/RPMS/noarch/yacy-${releaseVersion}_${releaseNr}-3.noarch.rpm"
+          tofile="${release}/yacy-${releaseVersion}_${releaseNr}-3.noarch.rpm" />
+    <move file="${release}/RPMS/noarch/yacy-lib-${releaseVersion}_${releaseNr}-3.noarch.rpm"
+          tofile="${release}/yacy-lib-${releaseVersion}_${releaseNr}-3.noarch.rpm" />
+
+    <delete dir="${release}/SPECS" failonerror="false" />
+    <delete dir="${release}/RPMS" failonerror="false" />
+    <delete dir="${release_windows}" failonerror="false" />
+  </target>
+	
+  <target name="distWinInstaller" depends="copyMain4Dist" description="Creates an NSIS Windows installer">
+    <!-- http://nsisant.sourceforge.net/ -->
+    <mkdir dir="${release_windows}" />
+    <copy file="build.nsi" tofile="${release_windows}/build.nsi" overwrite="true" filtering="true" />
+    <taskdef name="nsis" classname="net.sf.nsisant.Task">
+	    <classpath location="${libbuild}/nsisant-1.2.jar"/>
+    </taskdef>
+    <nsis script="${release_windows}/build.nsi" nocd="yes" verbosity="2" />
+    <move file="${release_windows}/yacy_v${releaseVersion}_${DSTAMP}_${releaseNr}.exe"
+          tofile="${release}/yacy_v${releaseVersion}_${DSTAMP}_${releaseNr}.exe" />
+  	
+    <delete dir="${release_main}"/>
+    <delete dir="${release_windows}" failonerror="false" />
+  </target>
+
+  <target name="distMacApp" depends="copyMain4Dist" description="Creates a YaCy.app">
+  	<copy todir="${release_mac}/YaCy.app">
+  		<fileset dir="${addon}/YaCy.app"></fileset>
+  	</copy>
+  	<copy file="${addon}/YaCy.app/Contents/Info.plist" tofile="${release_mac}/YaCy.app/Contents/Info.plist" filtering="true" overwrite="true" />
+  	<move file="${release_main}" tofile="${release_mac}/YaCy.app/Contents/Resources/Java" verbose="false" />
+    <chmod file="${release_mac}/YaCy.app/Contents/MacOS/JavaApplicationStub" perm="755"/>
+  	<exec executable="hdiutil">
+  	  	<arg line="create -srcfolder ${release_mac}/YaCy.app ${release}/yacy_v${releaseVersion}_${DSTAMP}_${releaseNr}.dmg"/>
+  	</exec>
+  	<delete dir="${release_mac}" failonerror="false" verbose="false" />
+  </target>
+
+  <!-- to use the deb command the following debian packages must be installed: dpkg-dev debhelper m4 -->
+  <target name="deb" depends="init" description="Creates a debian package">
+    <!-- replacing the old with the new revision number -->
+    <replaceregexp file="debian/changelog"
+                  match="yacy \(.*\) unstable; urgency=low"
+                  replace="yacy (${releaseVersion}svn${baseRevisionNr}) unstable; urgency=low" />
+
+    <!-- build debian package -->
+    <exec executable="dpkg-buildpackage">
+      <arg value="-b"/>
+      <arg value="-rfakeroot"/>
+      <arg value="-uc"/>
+    </exec>
+    <replaceregexp file="debian/changelog"
+                  match="yacy \(.*\) unstable; urgency=low"
+                  replace="yacy (*auto-svn-version*) unstable; urgency=low" />
+  </target>
+	
+  <target name="sign" depends="readBuildProperties" description="sign current release file in RELEASE/ with ${privateKeyFile}">
+    <fail message="There is no release file (${release}/${stdReleaseFile}) that could be signed !">
+        <condition>
+            <not><available file="${stdReleaseFile}" filepath="${release}" type="file" /></not>
+        </condition>
+    </fail>
+    <java classname="de.anomic.tools.CryptoLib" failonerror="true">
+      <classpath>
+        <pathelement location="${build}"/>
+      </classpath>
+      <arg line="--sign ${privateKeyFile} ${release}/${stdReleaseFile}"/>
+    </java>
+  </target>
+
+  <target name="genkey" depends="readBuildProperties" description="generate a pair of keys and write it to ${privateKeyFile} and ${privateKeyFile}.pub">
+    <fail message="There is already a private key file (${privateKeyFile})!">
+      <condition>
+	<available file="${privateKeyFile}" type="file" />
+      </condition>
+    </fail>
+    <java classname="de.anomic.tools.CryptoLib" failonerror="true">
+      <classpath>
+        <pathelement location="${build}"/>
+      </classpath>
+      <arg line="--gen-key ${privateKeyFile} ${privateKeyFile}.pub"/>
+    </java>
+    <chmod file="${privateKeyFile}" perm="600"/>
+  </target>
+
+  <target name="deleteData" description="start with a fresh yacy installation">
+    <delete dir="${data}"/>
+  </target>
+</project>

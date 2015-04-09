@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>YaCy '#[clientname]#': Hypertext Cache Configuration</title>
+    #%env/templates/metas.template%#
+  </head>
+  <body id="ConfigHTCache">
+    #%env/templates/header.template%#
+    #%env/templates/submenuConfig.template%#
+    <h2>Hypertext Cache Configuration</h2>
+    <p>
+      The HTCache stores content retrieved by the HTTP and FTP protocol. Documents from smb:// and file:// locations are not cached.
+      The cache is a rotating cache: if it is full, then the oldest entries are deleted and new one can fill the space.
+    </p>
+    
+    <form action="ConfigHTCache_p.html" method="post" enctype="multipart/form-data" accept-charset="UTF-8">
+      <fieldset><legend>HTCache Configuration</legend>
+        <dl>
+          <dt><label for="HTCachePath">The path where the cache is stored</label></dt>
+          <dd><input name="HTCachePath" id="HTCachePath" type="text" size="20" maxlength="300" value="#[HTCachePath]#" /></dd>
+          <dt><label for="actualCacheSize">The current size of the cache</label></dt>
+          <dd><span id="actualCacheSize">#[actualCacheSize]# MB</span></dd>
+          <dt><label for="maxCacheSize">The maximum size of the cache</label></dt>
+          <dd><input name="maxCacheSize" id="maxCacheSize" type="text" size="8" maxlength="24" value="#[maxCacheSize]#" /> MB</dd>
+          <dt>&nbsp;</dt>
+          <dd><input type="submit" name="set" value="Set" /></dd>
+        </dl>
+      </fieldset>
+    </form>
+
+    <form action="ConfigHTCache_p.html" method="post" enctype="multipart/form-data" accept-charset="UTF-8">
+    <fieldset><legend>Cleanup</legend>
+      <dl>
+        <dt class="TableCellDark">Cache Deletion</dt>
+        <dd><input type="checkbox" name="deleteCache" id="deleteCache"
+             onclick="x=document.getElementById('deleteCache').checked;document.getElementById('deleteRobots').checked=x;document.getElementById('deleteSearchFl').checked=x;c='disabled';if(x){c='';}document.getElementById('deleteRobots').disabled=c;document.getElementById('deleteSearchFl').disabled=c;"
+            />Delete HTTP &amp; FTP Cache<br/>
+            <input type="checkbox" name="deleteRobots" id="deleteRobots" disabled="disabled" />Delete robots.txt Cache<br/>
+            <input type="checkbox" name="deleteSearchFl" id="deleteSearchFl" disabled="disabled" />Delete cached snippet-fetching failures during search<br/><br/><br/>
+            <input type="submit" name="deletecomplete" value="Delete"/>
+        </dd>
+      </dl>
+    </fieldset>
+    </form>
+    
+    #%env/templates/footer.template%#
+  </body>
+</html>

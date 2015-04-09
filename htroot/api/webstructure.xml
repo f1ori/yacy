@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<webstructure maxhosts="#[maxhosts]#">
+#(out)#::
+<references direction="out" count="#[domains]#" maxref="#[maxref]#">
+#{domains}#
+<domain host="#[domain]#" id="#[hash]#" date="#[date]#">
+#{citations}#
+  <reference id="#[refhash]#" count="#[refcount]#">#[refdom]#</reference>
+#{/citations}#
+</domain>
+#{/domains}#
+</references>
+#(/out)#
+#(in)#::
+<references direction="in" count="#[domains]#">
+#{domains}#
+<domain host="#[domain]#" id="#[hash]#" date="#[date]#">
+#{citations}#
+  <reference id="#[refhash]#" count="#[refcount]#">#[refdom]#</reference>
+#{/citations}#
+</domain>
+#{/domains}#
+</references>
+#(/in)#
+</webstructure>

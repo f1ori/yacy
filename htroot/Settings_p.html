@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>YaCy '#[clientname]#': Advanced Settings</title>
+    #%env/templates/metas.template%#
+  </head>
+  <body id="Settings">
+    #%env/templates/header.template%#
+    #%env/templates/submenuConfig.template%#
+    <h2>Advanced Settings</h2>
+    <p>If you want to restore all settings to the default values,
+    but <strong>forgot your administration password</strong>, you must stop the proxy,
+    delete the file 'DATA/SETTINGS/yacy.conf' in the YaCy application root folder and start YaCy again.
+    </p>
+    <ul class="settingsMenu">
+      <li><a href="PerformanceQueues_p.html">Performance Settings of Busy Queues</a></li>
+      <li><a href="PerformanceConcurrency_p.html">Performance of Concurrent Processes</a></li>
+      <li><a href="PerformanceMemory_p.html">Performance Settings for Memory</a></li>
+      <li><a href="PerformanceSearch_p.html">Performance Settings of Search Sequence</a></li>
+    </ul>
+    <ul class="settingsMenu">
+      <li><a href="Tables_p.html">Viewer and administration for database tables</a></li>
+      <li><a href="News.html">Viewer for Peer-News</a></li>
+      <li><a href="CookieMonitorIncoming_p.html">Viewer for Cookies in Proxy</a></li>
+    </ul>
+    <ul class="settingsMenu">
+      <li><a href="?page=ServerAccess">Server Access Settings</a></li>
+      <li><a href="?page=ProxyAccess">Proxy Access Settings</a></li>
+      <li><a href="?page=crawler">Crawler Settings</a></li>
+      <li><a href="?page=http">HTTP Networking</a></li>
+      <li><a href="?page=proxy">Remote Proxy (optional)</a></li>
+      <li><a href="?page=seed">Seed Upload Settings</a></li>
+      <li><a href="?page=messageForwarding">Message Forwarding (optional)</a></li>
+    </ul>
+    #%[settingsTables]%#
+    
+    #%env/templates/footer.template%#
+  </body>
+</html>

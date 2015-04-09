@@ -1,0 +1,291 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>YaCy '#[user]#''s Bookmarks</title>
+		#%env/templates/metas.template%#
+		<link media="screen" type="text/css" href="yacy/ui/css/base.css" rel="stylesheet" />
+		<link media="screen" type="text/css" href="/yacy/ui/css/jquery.flexigrid.css" rel="stylesheet" />
+		<link media="screen" type="text/css" href="/yacy/ui/css/jquery.treeview.css" rel="stylesheet" /> 
+	</head>
+	<body id="ymarks_body">
+		#%env/templates/header.template%#
+		<script src="/yacy/ui/js/jquery-flexigrid.js" type="text/javascript"></script>
+		<script src="/yacy/ui/js/jquery.treeview.min.js" type="text/javascript"></script>
+  		<script src="/yacy/ui/js/jquery.treeview.async.js" type="text/javascript"></script>  
+		<script type="text/javascript">
+		   //<![CDATA[
+			HTMLenc = function(s) {
+				return $('<div/>').text(s).html();			
+			}
+			$(document).ready(function() {							
+				var height=document.documentElement.clientHeight - 200;    			
+		 		$('#ymarks').flexigrid({
+			 		url: '/api/ymarks/get_ymark.json',
+					dataType: 'json',
+			 		method: 'GET',
+			 		colModel: [	
+						{display: 'Hash', name : 'hash', width : 50, sortable : false, align: 'center', hide: true},
+						{display: 'Public', name : 'public', width : 25, sortable : true, align: 'center'},
+						{display: 'Title', name : 'title', width : 400, sortable : true, align: 'left'},
+						{display: 'Tags', name : 'tags', width : 160, sortable : false, align: 'left'},
+						{display: 'Folders', name : 'folders', width : 160, sortable : true, align: 'left', hide: false},
+						{display: 'Date added', name : 'date_added', width : 100, sortable : true, align: 'left'},
+						{display: 'Date visited', name : 'date_visited', width : 100, sortable : true, align: 'left'}
+					],
+					buttons: [				
+						{name: 'Add', bclass: 'bookmark', onpress: bm_action},
+						{name: 'Crawl', bclass: 'crawl', onpress: bm_action},
+						{name: 'Edit', bclass: 'edit', onpress: bm_action},
+						{name: 'Delete', bclass: 'delete', onpress: bm_action},
+						{separator: true},
+						{name: 'RSS', bclass: 'rss', onpress: bm_action},
+						{name: 'XBEL', bclass: 'xml', onpress: bm_action},
+						{name: 'XML', bclass: 'xml', onpress: bm_action},
+						{separator: true},
+						{name: 'Add', bclass: 'addTag', onpress: tag_action},
+						{name: 'Rename', bclass: 'editTag', onpress: tag_action},							
+						{separator: true},
+						{name: 'Help', bclass: 'help', onpress: bm_action},
+					],
+					searchitems : [
+						{display: 'Full text (regexp)', name : ''},
+						{display: 'Tags (comma seperated)', name : '_tags'},
+						{display: 'Tags (regexp)', name : 'tags'},
+						{display: 'Singel Folder', name : '_folder'},
+						{display: 'Folders (regexp)', name : 'folders'},
+						{display: 'Title (regexp)', name : 'title'},
+						{display: 'Description (regexp)', name : 'desc'}
+					],													
+					useRp: true,
+					rp: 15,
+					sortname: "title",
+					sortorder: "asc",
+					usepager: true,					
+					striped: true,
+					nowrap: false,			 									    				
+			 		height: height,
+			 		query: ".*",
+			 		qtype: "title"									    				
+		 		});
+
+				loadTagCloud();
+		 		
+				$('#sidebar').height(height+90);
+				$tabs = $('#sidebar').tabs({
+					// tabs options
+				});
+
+		  		$("#yfolder").treeview({
+					url: "/api/ymarks/get_treeview.json?bmtype=href",
+					unique: true,
+					toggle: function() {
+				    }				
+				});						
+
+				$("#yfolder").bind("click", function(event) {
+						if ($(event.target).is("li") || $(event.target).parents("li").length) {
+							var folder = $(event.target).parents("li").filter(":first").attr("id");
+							$('#ymarks').flexOptions({
+								query: folder,
+								qtype: "_folder",
+								newp: 1
+							});
+							$('#ymarks').flexReload();
+							return false;
+						}	
+				});
+			});
+
+			function loadTagCloud() {		
+				$("#tagcloud *").remove();
+				$.ajax({
+					type: "POST",
+					url: "/api/ymarks/get_tags.xml?top=25&sort=alpha",			
+					dataType: "xml",
+					cache: false,
+					success: function(xml) {			
+						$(xml).find('tag').each(function(){					
+							var count = $(this).attr('count');
+							var tag = $(this).attr('tag');										
+							var size = ((count/20)+0.3);
+							if (size < 1) {size = 1;}					
+							$('<a style="font-size:'+size+'em"></a>')
+								.html(HTMLenc(tag)+' ')						
+								.appendTo('#tagcloud')
+								.bind('click', function() {
+									var qtag = $(this).text().replace(/\s+/g,"");								
+									$('#ymarks').flexOptions({
+										query: qtag,
+										qtype: "_tags",
+										newp: 1
+									});
+									$('#ymarks').flexReload();					
+								});																									
+						}); //close each(							
+					}
+				}); //close $.ajax(
+			};
+			
+			function bm_action(com,grid) {
+				if (com=='XBEL') {
+					var qtype = "tags";
+					if (qtag.startsWith("/")) qtype = "folders";
+					window.document.location.href = '/api/bookmarks/get_bookmarks.xml?display=xbel&qtype='+qtype+'&query='+qtag;
+				}
+				else if (com=='RSS') {
+					window.document.location.href = '/Bookmarks.rss?qtype=tags&query='+qtag;
+				}
+				else if (com=='XML') {
+					window.document.location.href = '/api/bookmarks/get_bookmarks.xml?tag='+qtag;
+				}
+				else if (com=='Delete') {
+					var check = confirm('Delete ' + $('.trSelected',grid).length + ' bookmark(s)?');
+					if(check == true) {				
+						$('.trSelected',grid).each(function(){
+							var url = "/api/bookmarks/posts/delete_p.xml?login=&urlhash="+$(this).find('td :first').text();					
+							$.ajax({
+								type: 'POST',
+								url: url,			
+								dataType: 'xml'						
+							}); // close $.ajax(					
+						}); //close each(
+						loadTagCloud();
+						reloadBM();
+					}
+				}
+				else if (com=='Add') {			
+					$('#bmaddform').resetForm();
+					$("#bm_url").blur(function() { 
+						var url = $("input[name='bm_url']").getValue();
+						$.ajax({
+							type: "GET",
+							url: "/api/util/getpageinfo_p.xml?url="+url,			
+							dataType: "xml",
+							success: function(xml) {
+								var title = $(xml).find('title').text();
+								$("input[name='bm_title']").setValue(title);
+								var desc = $(xml).find('desc').text();					
+								$("textarea[name='bm_desc']").setValue(desc);					
+								tags = "";
+								$(xml).find('tag').each(function(){
+									tags = tags + "," + $(this).attr('name');
+								});
+								$("input[name='bm_tags']").setValue(tags);									
+							}					
+						});
+					});						
+					$("#bmadd").dialog('open');
+				} 
+				else if (com=='Edit') {
+					if ($('.trSelected',grid).length > 1) {
+						alert("Edit of more than one selected bookmark is currently not supportet!");
+						return false;
+					}
+					$("input[name='bm_url']").setValue($('.trSelected',grid).find('.url').text());
+		            $("input[name='bm_title']").setValue($('.trSelected',grid).find('h3.linktitle').text().trim());
+		            $("textarea[name='bm_desc']").setValue($('.trSelected',grid).find('p.desc').text().trim());            		
+		            $("input[name='bm_tags']").setValue($('.trSelected',grid).find('p.tags').text().trim().replace(/,\s/g,","));            
+		            $("input[name='bm_path']").setValue($('.trSelected',grid).find('p.folders').text().replace(/,\s/g,","));
+		            $("select[name='bm_public']").setValue($('.trSelected',grid).find('img').attr('alt'));
+		            $("#bmadd").dialog('open'); 
+				}		
+			}
+			function tag_action(com,grid) {
+				if (com=='Add') {
+					flex = grid;			
+					$('#tagaddform').resetForm();
+					$("#tagadd").dialog('open');
+				} else 	{
+					$('#tageditform').resetForm();
+					$("#tagedit").dialog('open');
+				}				
+			};
+		  //]]>
+		</script>
+		<div class="SubMenu">
+			<h3>Bookmarks</h3>
+			<!-- 
+			<ul class="SubMenu">
+				#(login)#<li><a href="YMarks.html" class="MenuItemLink">Login</a></li>::#(/login)#
+				<li><a href="/api/ymarks/test_treeview.html" class="MenuItemLink lock">TreeView</a></li>
+				<li><a href="/api/ymarks/test_import.html" class="MenuItemLink lock">Import Bookmarks</a></li>
+				<li><a href="/api/ymarks/get_xbel.xml" class="MenuItemLink lock">Bookmarks (XBEL)</a></li>
+			</ul>
+			<p/>
+			-->
+		</div>
+		<div id="sidebar" class="sidebar" style="float:right; margin-left:10px; margin-top:5px; padding-top:2px;">
+			<ul>
+				<li><a href="#tab1" title="folders"><span>Folders</span></a></li>
+				<li><a href="#tab2" title="tags"><span>Tags</span></a></li>
+				<li><a href="#tab3" title="import"><span>Import</span></a></li>									
+			</ul>	
+			<div id="tab1"">			
+				<div style="margin-top:2px; background:url('/yacy/ui/img/flexigrid/bg.gif') repeat-x scroll center top #FAFAFA;
+				border-color:#CCCCCC #CCCCCC -moz-use-text-color; border-style:solid solid none; border-width:1px 1px 0; padding:5px; 
+				margin-top:-10px; margin-left:-15px; margin-right:-15px; margin-bottom: 15px;">
+					<img src="/yacy/ui/img-2/plus.png" alt="Add" style="padding-right:4px; padding-left:5px;"/>Add
+					<img src="/yacy/ui/img-2/cancel.png" alt="Delete" style="padding-right:4px; padding-left:5px;"/>Delete
+					<img src="/yacy/ui/img-2/pencil.png" alt="Edit" style="padding-right:4px; padding-left:5px;"/>Edit
+					<img src="/yacy/ui/img-2/question_blue.png" alt="Help" style="padding-right:4px; padding-left:25px;"/>Help					
+				</div>
+				<div>
+					<ul id="yfolder" class="filetree"></ul>
+				</div>
+			</div>	
+			<div id="tab2">
+				<div style="margin-top:2px; background:url('/yacy/ui/img/flexigrid/bg.gif') repeat-x scroll center top #FAFAFA;
+				border-color:#CCCCCC #CCCCCC -moz-use-text-color; border-style:solid solid none; border-width:1px 1px 0; padding:5px; 
+				margin-top:-10px; margin-left:-15px; margin-right:-15px; margin-bottom: 15px;">
+					<img src="/yacy/ui/img-2/plus.png" alt="Add" style="padding-right:4px; padding-left:5px;"/>Add
+					<img src="/yacy/ui/img-2/cancel.png" alt="Delete" style="padding-right:4px; padding-left:5px;"/>Delete
+					<img src="/yacy/ui/img-2/pencil.png" alt="Edit" style="padding-right:4px; padding-left:5px;"/>Edit
+					<img src="/yacy/ui/img-2/question_blue.png" alt="Help" style="padding-right:4px; padding-left:25px;"/>Help					
+				</div>
+				<div>
+					<p id="tagcloud"></p>	
+				</div>
+			</div>
+			<div id="tab3">
+			Import Form
+			</div>
+		</div>
+		<!-- Display Bookmarks Table -->
+		<div style="margin-top: 7px;">
+			<table id="ymarks" summary="YaCy Bookmarks">
+				<tbody>		
+				</tbody>
+			</table>
+			<!--  
+			<div id="editbox">	
+				<h3 id="box-1"><a href="#">Edit Bookmark</a></h3>
+				<div>
+					<form action="Bookmarks.html" method="get" accept-charset="UTF-8">
+						<label for="url">URL:</label>
+						<input type="text" name="url" id="url" value="#[url]#" onblur="loadTitle()" size="80" />
+						<br />
+						<label for="title">Title:</label>
+						<input type="text" name="title" id="title" value="#[title]#" size="80" />
+						<br />
+						<label for="description">Description:</label>
+						<input type="text" name="description" id="description" value="#[description]#" size="80" />
+						<br />
+						<label for="folder">Folder (/folder/subfolder):</label>
+						<input type="text" name="path" id="path" value="#[path]#" size="80" />
+						<br />
+						<label for="tags">Tags (comma separated):</label>
+						<input type="text" name="tags" id="tags" value="#[tags]#" size="80" />
+						<br />
+						<label for="public">Public:</label>
+						<select name="public" id="public">
+							<option value="public">yes</option>
+							<option value="private" selected="selected">no</option>
+						</select>
+					</form>
+				</div>		
+			</div>
+			-->
+		</div>	
+		#%env/templates/footer.template%#
+	</body>
+</html>

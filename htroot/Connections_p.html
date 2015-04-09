@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>YaCy '#[clientname]#': Server Connection Tracking</title>
+    #%env/templates/metas.template%#
+    <meta http-equiv="REFRESH" content="3" />
+  </head>
+  <body id="Connections">
+    #%env/templates/header.template%#
+    #%env/templates/submenuAccessTracker.template%#
+    <script type="text/javascript" src="/js/sorttable.js"></script>
+    <h2>Server Connection Tracking</h2>
+    <h3>Incoming Connections</h3>
+    <p>Showing #[numActiveRunning]# active, #[numActivePending]# pending connections from a max. of #[numMax]# allowed incoming connections.</p>
+    <table class="sortable" border="0" cellpadding="2" cellspacing="1">
+      <tr class="TableHeader" valign="bottom">
+        <td>Protocol</td>
+        <td>Duration</td>
+        <td>Source IP[:Port]</td>
+        <td>Dest. IP[:Port]</td>
+        <td>Command</td>
+        <td>Used</td>
+        <td>Close</td>
+      </tr>
+      #{list}#
+      <tr class="TableCell#(dark)#Light::Dark::Summary#(/dark)#" title="#[sessionName]#">
+        <td>#[proto]#</td>
+        <td>#(ms)##[duration]#::#[duration]# ms#(/ms)#</td>
+        <td>#[source]#</td>
+        <td>#[dest]#</td>
+        <td>#(running)#Waiting for new request nr. # #[reqNr]#::#[command]##(/running)#</td>
+        <td>#[used]#</td>
+        <td><a href="Connections_p.html?closeServerSession=#[serverSessionID]#">[Close]</a></td>
+      </tr>
+      #{/list}#
+    </table>
+
+	<h3>Outgoing Connections</h3>
+	<p>Showing #[clientActive]# pooled outgoing connections used as:</p>
+    <table class="sortable" border="0" cellpadding="2" cellspacing="1">
+      <tr class="TableHeader" valign="bottom">
+        <td>Protocol</td>
+        <td>Duration</td>
+        <td>Up-Bytes</td>
+        <td>Dest. IP[:Port]</td>
+        <td>Command</td>
+        <td>ID</td>
+      </tr>
+      #{clientList}#
+      <tr class="TableCell#(dark)#Light::Dark#(/dark)#">
+        <td>#[clientProtocol]#</td>
+        <td>#[clientLifetime]#</td>
+        <td>#[clientUpbytes]#</td>
+        <td>#[clientTargetHost]#</td>
+        <td>#[clientCommand]#</td>
+        <td>#[clientID]#</td>
+      </tr>
+      #{/clientList}#
+    </table>
+    
+    #%env/templates/footer.template%#
+  </body>
+</html>

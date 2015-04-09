@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+  <title>YaCy '#[clientname]#': Dictionary Loader</title>
+  #%env/templates/metas.template%#
+  </head>
+  <body id="DictionaryLoader">
+    #%env/templates/header.template%#
+    #%env/templates/submenuConfig.template%#
+    <h2>Dictionary Loader</h2>
+
+	<p>
+	YaCy can use external libraries to enable or enhance some functions. These libraries are not
+	included in the main release of YaCy because they would increase the application file too much.
+	You can download additional files here.
+	</p>
+	
+    <form action="DictionaryLoader_p.html" method="post" enctype="multipart/form-data" accept-charset="UTF-8">
+      <fieldset>
+        <legend>Geolocalization</legend>
+        Geolocalization will enable YaCy to present locations from OpenStreetMap according to given search words.
+        
+        <h4>GeoNames</h4>
+	    <p>With this file it is possible to find cities with a population > 1000 all over the world.</p>
+        
+        <dl>
+          <dt><label>Download from</label></dt>
+          <dd>#[geon0URL]#</dd>
+          <dt><label>Storage location</label></dt>
+          <dd>#[geon0Storage]#</dd>
+          <dt><label>Status</label></dt>
+          <dd>#(geon0Status)#<div class="info">not loaded</div>::<div class="commit">loaded</div>::deactivated#(/geon0Status)#</dd>
+          <dt>Action</dt>
+          <dd>#(geon0Status)#
+          <input type="submit" name="geon0Load" value="Load" />::
+          <input type="submit" name="geon0Deactivate" value="Deactivate" />
+          <input type="submit" name="geon0Remove" value="Remove" />::
+          <input type="submit" name="geon0Activate" value="Activate" />
+          <input type="submit" name="geon0Remove" value="Remove" />
+          #(/geon0Status)#</dd>
+          #(geon0ActionLoaded)#::
+          <dt>Result</dt><dd><div class="commit">loaded and activated dictionary file</div></dd>::
+          <dt>Result</dt><dd><div class="error">loading of dictionary file failed: #[error]#</div></dd>
+          #(/geon0ActionLoaded)#
+          #(geon0ActionRemoved)#::
+          <dt>Result</dt><dd><div class="commit">deactivated and removed dictionary file</div></dd>::
+          <dt>Result</dt><dd><div class="error">cannot remove dictionary file: #[error]#</div></dd>
+          #(/geon0ActionRemoved)#
+          #(geon0ActionDeactivated)#::
+          <dt>Result</dt><dd><div class="commit">deactivated dictionary file</div></dd>::
+          <dt>Result</dt><dd><div class="error">cannot deactivate dictionary file: #[error]#</div></dd>
+          #(/geon0ActionDeactivated)#
+          #(geon0ActionActivated)#::
+          <dt>Result</dt><dd><div class="commit">activated dictionary file</div></dd>::
+          <dt>Result</dt><dd><div class="error">cannot activate dictionary file: #[error]#</div></dd>
+          #(/geon0ActionActivated)#        
+        </dl>
+        
+        <h4>OpenGeoDB</h4>
+	    <p>With this file it is possible to find locations in Germany using the location (city) name, a zip code, a car sign or a telephone pre-dial number.</p>
+        
+        <dl>
+          <dt><label>Download from</label></dt>
+          <dd>#[geo1URL]#</dd>
+          <dt><label>Storage location</label></dt>
+          <dd>#[geo1Storage]#</dd>
+          <dt><label>Status</label></dt>
+          <dd>#(geo1Status)#<div class="info">not loaded</div>::<div class="commit">loaded</div>::deactivated#(/geo1Status)#</dd>
+          <dt>Action</dt>
+          <dd>#(geo1Status)#
+          <input type="submit" name="geo1Load" value="Load" />::
+          <input type="submit" name="geo1Deactivate" value="Deactivate" />
+          <input type="submit" name="geo1Remove" value="Remove" />::
+          <input type="submit" name="geo1Activate" value="Activate" />
+          <input type="submit" name="geo1Remove" value="Remove" />
+          #(/geo1Status)#</dd>
+          #(geo1ActionLoaded)#::
+          <dt>Result</dt><dd><div class="commit">loaded and activated dictionary file</div></dd>::
+          <dt>Result</dt><dd><div class="error">loading of dictionary file failed: #[error]#</div></dd>
+          #(/geo1ActionLoaded)#
+          #(geo1ActionRemoved)#::
+          <dt>Result</dt><dd><div class="commit">deactivated and removed dictionary file</div></dd>::
+          <dt>Result</dt><dd><div class="error">cannot remove dictionary file: #[error]#</div></dd>
+          #(/geo1ActionRemoved)#
+          #(geo1ActionDeactivated)#::
+          <dt>Result</dt><dd><div class="commit">deactivated dictionary file</div></dd>::
+          <dt>Result</dt><dd><div class="error">cannot de-activate dictionary file: #[error]#</div></dd>
+          #(/geo1ActionDeactivated)#
+          #(geo1ActionActivated)#::
+          <dt>Result</dt><dd><div class="commit">activated dictionary file</div></dd>::
+          <dt>Result</dt><dd><div class="error">cannot activate dictionary file: #[error]#</div></dd>
+          #(/geo1ActionActivated)#        
+        </dl>
+      </fieldset>
+    </form>
+    
+  #%env/templates/footer.template%#
+  </body>
+</html>

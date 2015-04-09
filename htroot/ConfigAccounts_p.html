@@ -1,0 +1,114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>YaCy '#[clientname]#': User Accounts</title>
+    #%env/templates/metas.template%#
+  </head>
+<body>
+    #%env/templates/header.template%#
+    #%env/templates/submenuConfig.template%#
+    <h2>User Administration</h2>
+    
+    <!-- Page 1: Results -->
+    #(text)#
+    ::
+    <p>User created: #[username]#</p>
+    ::
+    <p>User changed: #[username]#</p>
+    #(/text)#
+    #(error)#
+    ::
+    <p class="error">Generic error.</p>
+    ::
+    <p class="error">Passwords do not match.</p>
+    ::
+    <p class="error">Username too short. Username must be >= 4 Characters.</p>
+    #(/error)#
+    #(passwordNotSetWarning)#::<div class="error">No password is set for the administration account. Please define a password for the admin account.</div>#(/passwordNotSetWarning)#
+
+    <fieldset><legend>Admin Account</legend>
+      <form action="ConfigAccounts_p.html" method="post" accept-charset="UTF-8">
+          <fieldset>
+            <legend>
+            <input type="radio" name="access" id="access_localhost" value="localhost"#(localhost.checked)#:: checked="checked"#(/localhost.checked)# />
+            <label for="access_localhost">Access from localhost without account</label>
+            </legend>
+            Access to your peer from your own computer (localhost access) is granted. No need to configure an administration account.
+            </fieldset>
+            
+            <fieldset>
+            <legend>
+            <input type="radio" name="access" id="access_account" value="account"#(account.checked)#:: checked="checked"#(/account.checked)# />
+            <label for="access_account">Access only with qualified account</label>
+            </legend>
+            You need this only if you want a remote access to your peer.
+            <dl class="userConfig">
+              <dt><label for="adminuser">Peer User:</label></dt>
+              <dd><input type="text" name="adminuser" id="adminuser" value="#[defaultUser]#" size="16" maxlength="32" /></dd>
+              <dt><label for="adminpw1">New Peer Password:</label></dt>
+              <dd><input type="password" name="adminpw1" id="adminpw1" value="" size="16" maxlength="1024" /></dd>
+              <dt><label for="adminpw2">Repeat Peer Password:</label></dt>
+              <dd><input type="password" name="adminpw2" id="adminpw2" value="" size="16" maxlength="1024" /></dd>
+            </dl>
+          <input type="submit" name="setAdmin" value="Define Administrator" />
+          </fieldset>
+      </form>
+    </fieldset>
+    
+    <fieldset><legend>User Accounts</legend>
+	<form action="ConfigAccounts_p.html" accept-charset="UTF-8">
+      <fieldset><legend>Select user</legend>
+        <dl>
+          <dt><label for="user">Select user</label>:</dt>
+          <dd>
+            <select name="user" id="user">
+              <option value="newuser">New user</option>#{users}#
+              <option>#[user]#</option>#{/users}#
+            </select>
+          </dd>
+          <dt>&nbsp;</dt>
+          <dd>
+            <input type="submit" name="change_user" value="Edit User" />
+            <input type="submit" name="delete_user" value="Delete User" />
+          </dd>
+        </dl>
+      </fieldset>
+    </form>
+    
+    <form action="ConfigAccounts_p.html" method="post" accept-charset="UTF-8">
+      <fieldset><legend>Edit current user: #[username]#</legend>
+        <!-- Hidden(text for debugging): <input type="text" name="current_user" value="#[current_user]#" readonly> -->
+        <input type="hidden" name="current_user" value="#[current_user]#" />
+        <dl>
+          <dt><label for="username">Username</label>:</dt>
+          <dd><input type="text" id="username" name="username" value="#[username]#" /></dd>
+          <dt><label for="password">Password</label>:</dt>
+          <dd><input type="password" id="password" name="password" /></dd>
+          <dt><label for="password2">Repeat password</label>:</dt>
+          <dd><input type="password" id="password2" name="password2" /></dd>
+          <dt><label for="firstname">First name</label>:</dt>
+          <dd><input type="text" id="firstname" name="firstname" value="#[firstname]#" /></dd>
+          <dt><label for="lastname">Last name</label>:</dt>
+          <dd><input type="text" id="lastname" name="lastname" value="#[lastname]#" /></dd>
+          <dt><label for="address">Address</label>:</dt>
+          <dd><input type="text" id="address" name="address" value="#[address]#" /></dd>
+          <dt>Rights:</dt>
+          <dd>
+          	#{rights}#
+            <input type="checkbox" id="#[name]#" name="#[name]#"#(set)#:: checked="checked"#(/set)# /><label for="#[name]#">#[friendlyName]# right</label><br />
+            #{/rights}#
+          </dd>
+          <dt><label for="tlimit">Timelimit</label>:</dt>
+          <dd><input type="text" id="tlimit" name="timelimit" value="#[timelimit]#" /></dd>
+          <dt><label for="tused">Time used</label>:</dt>
+          <dd><input type="text" id="tused" name="timeused" value="#[timeused]#" /></dd>
+          <dt>&nbsp;</dt>
+          <dd><input type="submit" name="change" value="Save User" /></dd>
+        </dl>
+      </fieldset>
+    </form>
+    </fieldset>
+    
+#%env/templates/footer.template%#
+</body>
+</html>

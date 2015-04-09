@@ -1,0 +1,124 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    #(forwardToSteering)#::<meta http-equiv="REFRESH" content="0; url=/Steering.html?update=1&amp;releaseinstall=#[release]#" />#(/forwardToSteering)#
+    <title>YaCy '#[clientname]#': System Update</title>
+    #%env/templates/metas.template%#
+  </head>
+  <body style="margin:0px;">
+    #%env/templates/header.template%#
+    #%env/templates/submenuConfig.template%#
+	<h2>System Update</h2>
+	
+	#(deploys)#::Release will be installed. Please wait.#(/deploys)#
+	
+    #(candeploy)#
+    This servlet can only be used on operation systems that are currently supported for deploy functions.
+    If you see this message this means that your operation system is not supported. 
+    ::
+      <fieldset>
+      <legend>Manual System Update</legend>
+      <dl>
+      <dt>Current installed Release</dt>
+      <dd>#[versionpp]#</dd>
+      <dt><br />Available Releases (<a href="http://svn.berlios.de/wsvn/yacy/?op=log">changelog</a>)</dt>
+      <dd><form action="ConfigUpdate_p.html" method="get" accept-charset="UTF-8"><p>
+        &nbsp;<select name="releasedownload">
+        #{availreleases}#
+        <option #(selected)#::selected="selected"#(/selected)# value="#[url]#">#[name]# #(signatures)#(unsigned)::(signed)#(/signatures)#</option>
+        #{/availreleases}#
+        </select>
+    	&nbsp;&nbsp;<input type="submit" name="downloadRelease" value="Download Release" />
+    	&nbsp;&nbsp;<input type="submit" name="checkRelease" value="Check for new Release" />
+      </p></form></dd>
+      <dt><br />Downloaded Releases</dt>
+      <dd><form action="ConfigUpdate_p.html" method="get" accept-charset="UTF-8"><p>
+		#(downloadsAvailable)#
+		No downloaded releases available for deployment.
+		::
+		&nbsp;<select name="releaseinstall">
+		#(/downloadsAvailable)#
+        #{downloadedreleases}#
+        <option #(selected)#::selected="selected"#(/selected)# value="#[file]#">#[name]# #(signature)#(no signature)::(signed)#(/signature)#</option>
+        #{/downloadedreleases}#
+        #(downloadsAvailable)#::</select>#(/downloadsAvailable)#
+        #(deployenabled)#::no&nbsp;automated installation on development environments::
+    	&nbsp;&nbsp;<input type="submit" name="update" value="Install Release" #(buttonsActive)#disabled="disabled"::#(/buttonsActive)#/>
+        &nbsp;&nbsp;<input type="submit" name="deleteRelease" value="Delete Release" #(buttonsActive)#disabled="disabled"::#(/buttonsActive)#/>
+        #(/deployenabled)#		
+      </p></form></dd>
+      <dt><br />Automatic Update</dt>
+      <dd><form action="ConfigUpdate_p.html" method="get" accept-charset="UTF-8"><p>
+        &nbsp;check for new releases, download if available and restart with downloaded release<br />
+        &nbsp;&nbsp;<input type="submit" name="autoUpdate" value="Check + Download + Install Release Now" /><br />
+        #(autoUpdate)#::
+        <div class="commit">Download of release #[downloadedRelease]# finished. Restart Initiated.</div>::
+        <div class="error">No more recent release found.</div>::
+        <div class="error">Omitting update because this is a development environment.</div>::
+        <div class="error">Omitting update because download of release #[downloadedRelease]# failed.</div>
+        #(/autoUpdate)#
+      </p></form></dd>
+      </dl>
+      </fieldset>
+      
+      <form action="ConfigUpdate_p.html" method="get" accept-charset="UTF-8">
+      <fieldset>
+      <legend>Automated System Update</legend>
+      <dl>
+      
+      <dt>
+        manual update&nbsp;<input type="radio" name="updateMode" value="manual" #(manualUpdateChecked)#::checked="checked" #(/manualUpdateChecked)#/>&nbsp;
+      </dt>
+      <dd>
+        no automatic look-up, updates can be made manually using this interface (see options above)<br /><br />
+      </dd>
+      
+      <dt>
+        automatic update&nbsp;<input type="radio" name="updateMode" value="auto" #(autoUpdateChecked)#::checked="checked" #(/autoUpdateChecked)#/>&nbsp;
+      </dt>
+      <dd>
+        updates are made within fixed cycles:
+        <fieldset>
+        <dl>
+        <dt>Time between lookup</dt>
+        <dd><input type="text" name="cycle" value="#[cycle]#" size="4" maxlength="4" />hours</dd>
+        <dt>Release blacklist</dt>
+        <dd><input type="text" name="blacklist" value="#[blacklist]#" size="20" maxlength="20" />(regex on release number strings)</dd>
+        <dt>Release type</dt>
+        <dd>
+          <input type="radio" name="releaseType" value="main" #(releaseTypeMainChecked)#::checked="checked" #(/releaseTypeMainChecked)#/>only main releases&nbsp;&nbsp;
+          <input type="radio" name="releaseType" value="any" #(releaseTypeAnyChecked)#::checked="checked" #(/releaseTypeAnyChecked)#/>any release including developer releases
+        </dd>
+        </dl>
+        </fieldset>
+      </dd>
+      <dt>
+        Signed autoupdate:&nbsp;
+      </dt>
+      <dd>
+        <input type="checkbox" name="onlySignedFiles" value="true" #(onlySignedFiles)#::checked="checked" #(/onlySignedFiles)#/>
+        only accept signed files
+      </dd>
+      <dt><input type="submit" name="configSubmit" value="Submit" /></dt>
+      <dd>#(configCommit)#&nbsp;::<div class="commit">Accepted Changes.</div>#(/configCommit)#</dd>
+      </dl>
+      </fieldset>
+      </form>
+      
+      <fieldset>
+      <legend>System Update Statistics</legend>
+      <dl>
+      <dt>Last System Lookup</dt><dd><p>#(lastlookup)#never::#[time]##(/lastlookup)#</p></dd>
+      <dt>Last Release Download</dt><dd><p>#(lastdownload)#never::#[time]##(/lastdownload)#</p></dd>
+      <dt>Last Deploy</dt><dd><p>#(lastdeploy)#never::#[time]##(/lastdeploy)#</p></dd>
+      </dl>
+      </fieldset>
+      ::
+      You installed YaCy with a package manager. To update YaCy, use the package manager:<p>
+      Debian: apt-get update &amp;&amp; apt-get install yacy</p>
+      ::
+    #(/candeploy)#
+    
+    #%env/templates/footer.template%#
+  </body>
+</html>

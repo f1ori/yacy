@@ -1,0 +1,248 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>#[former]# - YaCy '#[clientname]#': Search Page</title>
+  #%env/templates/metas.template%#
+  <link rel="alternate" type="application/rss+xml" title="Search for #[former]#" href="yacysearch.rss?query=#[former]#" />
+  <link rel="search" type="application/opensearchdescription+xml" title="YaCy Search on '#[clientname]#'" href="opensearchdescription.xml" /> 
+  <link rel="stylesheet" type="text/css" media="screen" href="/env/highslide.css" />
+  <script type="text/javascript" src="/js/ajax.js"></script>
+  <script type="text/javascript" src="/js/xml.js"></script>
+  <script type="text/javascript" src="/js/yacysearch.js"></script>
+  <script type="text/javascript" src="/js/highslide/highslide.js"></script>
+  <script type="text/javascript">hs.outlineType = 'rounded-white';</script>
+  <script src="/yacy/ui/js/jquery-1.3.2.min.js" type="text/javascript"></script>
+  <script src="/yacy/ui/js/jquery-ui-1.7.2.min.js" type="text/javascript"></script>
+  <script src="/yacy/ui/js/jquery.tagcloud.min.js" type="text/javascript"></script>
+  <script src="/yacy/ui/js/jquery.tinysort.min.js" type="text/javascript"></script>
+  <link media="screen" type="text/css" href="/yacy/ui/css/themes/start/ui.base.css" rel="stylesheet" />
+  <link media="screen" type="text/css" href="/yacy/ui/css/themes/start/ui.theme.css" rel="stylesheet" />
+  <link media="screen" type="text/css" href="/yacy/ui/css/autocomplete.css" rel="stylesheet" />  
+
+  <script type="text/javascript">
+  //<![CDATA[
+  function handleArrowKeys(evt) {
+    evt = (evt) ? evt : ((window.event) ? event : null);
+    if (evt) {
+        switch (evt.keyCode) {
+            case 37:
+                window.location.href = document.getElementById("prevpage").href;
+                break;   
+            case 39:
+                window.location.href = document.getElementById("nextpage").href;
+                break;    
+            case 40:
+         }
+    }
+  }
+  //document.onkeydown = handleArrowKeys;
+  //]]>
+  </script>
+</head>
+<body id="yacysearch">
+
+    <script type="text/javascript" src="/yacy/ui/js/jquery.autocomplete.yacy.js"></script>
+	<script type="text/javascript">
+      $(document).ready(function() {
+		$('#search').autocomplete('/suggest.json', {parse: opensearch, delay: 0, selectFirst: false, scroll: false, max: 30});  
+        function opensearch(data) {
+            var parsed = [];
+            data = eval('({"suggest":' + data + '})');
+            for (var i = 0; i < data.suggest[1].length; i++) {  
+                var row = data.suggest[1][i];
+                if (row) {  
+                    parsed[parsed.length] = {  
+                        data: [row],  
+                        value: row,  
+                        result: row  
+                    };  
+                };
+            };
+            return parsed;  
+        };
+      });
+    </script>
+
+    #(topmenu)#
+    #%env/templates/embeddedheader.template%#
+    ::
+<div id="api">
+<script type="text/javascript">
+//<![CDATA[
+document.write("\<a href=\"yacysearch.rss?" + window.location.search.substring(1) + "\"\>")
+//]]>
+</script>
+<img src="env/grafics/api.png" width="60" height="40" alt="API" /></a>
+<span>This search result can also be retrieved as RSS/<a href="http://www.opensearch.org">opensearch</a> output.
+The query format is similar to <a href="http://www.loc.gov/standards/sru/">SRU</a>.
+Click the API icon to see an example call to the search rss API.
+To see a list of all APIs, please visit the <a href="http://www.yacy-websuche.de/wiki/index.php/Dev:API">API wiki page</a>.</span>
+</div>	
+    #%env/templates/simpleheader.template%#
+    #(/topmenu)#
+    
+<script type="text/javascript">
+//<![CDATA[
+$(function() {
+	$.extend($.ui.accordion.defaults, {
+		autoHeight: false,
+		clearStyle: true,
+		collapsible: true,
+		header: "h3"
+	});
+	$("#sidebarDomains").accordion({});
+	$("#sidebarNameSpace").accordion({});
+	$("#sidebarAuthors").accordion({});
+	$("#sidebarAuthors").accordion('activate', false);
+    $("#sidebarTopics").tagcloud({type:"sphere",power:.25,seed:0,sizemin:10,sizemax:20,height:80,colormin:"682",colormax:"20C"}).find("li").tsort();
+    $("#sidebarAbout").accordion({});
+	$("#search").focus();
+});
+//]]>
+</script>
+
+<form class="search small" action="yacysearch.html" method="get" accept-charset="UTF-8">
+  <h2>#[promoteSearchPageGreeting]#</h2>
+  <div class="yacylogo"><a href="#[promoteSearchPageGreeting.homepage]#" class="yacylogo"><img src="#[promoteSearchPageGreeting.smallImage]#" alt="yacysearch" /></a></div>
+  <fieldset class="yacys">
+    <input id="search" name="query" type="text" size="50" maxlength="80" value="#[former]#" onclick="document.getElementById('Enter').value = 'Search'" />
+    <input id="Enter" type="submit" name="Enter" value="Search" />
+    #(searchdomswitches)#::
+    <div class="yacysearch">
+	    #(searchtext)#::<input type="radio" id="text" name="contentdom" value="text" #(check)#::checked="checked"#(/check)# /><label for="text">Text</label>&nbsp;&nbsp;#(/searchtext)#
+	    #(searchimage)#::<input type="radio" id="image" name="contentdom" value="image" #(check)#::checked="checked"#(/check)# /><label for="image">Images</label>&nbsp;&nbsp;#(/searchimage)#
+	    #(searchaudio)#::<input type="radio" id="audio" name="contentdom" value="audio" #(check)#::checked="checked"#(/check)# /><label for="audio">Audio</label>&nbsp;&nbsp;#(/searchaudio)#
+	    #(searchvideo)#::<input type="radio" id="video" name="contentdom" value="video" #(check)#::checked="checked"#(/check)# /><label for="video">Video</label>&nbsp;&nbsp;#(/searchvideo)#
+	    #(searchapp)#::<input type="radio" id="app" name="contentdom" value="app" #(check)#::checked="checked"#(/check)# /><label for="app">Applications</label>#(/searchapp)#
+        &nbsp;
+        <a href="index.html?searchoptions=2&amp;count=#[count]#&amp;urlmaskfilter=#[urlmaskfilter]#&amp;prefermaskfilter=#[prefermaskfilter]#&amp;cat=#[cat]#&amp;constraint=#[constraint]#&amp;contentdom=#[contentdom]#&amp;former=#[former]#&amp;meanCount=#[meanCount]#">more options</a>
+    </div>
+    #(/searchdomswitches)#
+    <input type="hidden" name="former" value="#[former]#" />
+    <input type="hidden" name="maximumRecords" value="#[count]#" />
+    <input type="hidden" name="startRecord" value="#[offset]#" />
+    <input type="hidden" name="verify" value="#[search.verify]#" />
+    <input type="hidden" name="resource" value="#[resource]#" />
+    <input type="hidden" name="nav" value="#[search.navigation]#" />
+    <input type="hidden" name="urlmaskfilter" value="#[urlmaskfilter]#" />
+    <input type="hidden" name="prefermaskfilter" value="#[prefermaskfilter]#" />
+    <input type="hidden" name="depth" value="#[depth]#" />
+    <input type="hidden" name="cat" value="#[cat]#" />
+    <input type="hidden" name="constraint" value="#[constraint]#" />
+    <input type="hidden" name="meanCount" value="#[meanCount]#" />
+  </fieldset>
+</form>
+#(urlmaskerror)#::
+<p><b>Illegal URL mask:</b> <i>#[urlmask]#</i> (not a valid regular expression), mask ignored.</p>
+#(/urlmaskerror)#
+
+#(prefermaskerror)#::
+<p><b>Illegal prefer mask:</b> <i>#[prefermask]#</i> (not a valid regular expression), mask ignored.</b></p>
+#(/prefermaskerror)#
+
+#(didYouMean)#::
+<p><b>Did you mean:</b> #{suggestions}# <a href="#[url]#">#[word]#</a> #[sep]##{/suggestions}#</p>
+#(/didYouMean)#
+
+#(searchagain)#
+::
+<script type="text/javascript">
+document.getElementById("Enter").value = "search again";
+</script>
+#(/searchagain)#
+
+<!-- show information about search key handling -->
+#(excluded)#
+	::
+	<p><strong>The following words are stop-words and had been excluded from the search: #[stopwords]#.</strong></p>
+#(/excluded)#
+
+<!-- type the number of results and navigation bar -->
+#(num-results)#
+	::
+	<p>No Results.</p>
+	::
+	<p>No Results. (length of search words must be at least 3 characters)</p>
+	::
+	<div id="results"></div>
+	<span id="resCounter" style="display: inline;"><strong id="resultsOffset">#[offset]#</strong>-<strong id="itemscount">#[itemscount]#</strong> of <strong id="totalcount">#[totalcount]#</strong> #(globalresults)#::; (<strong id="localResourceSize">#[localResourceSize]#</strong> local, <strong id="remoteResourceSize">#[remoteResourceSize]#</strong> remote), <strong id="remoteIndexCount">#[remoteIndexCount]#</strong> from <strong id="remotePeerCount">#[remotePeerCount]#</strong> remote YaCy peers.#(/globalresults)#</span>
+	<span id="resNav" style="display: inline;">#[resnav]#</span>
+	::
+	<p>Searching the web with this peer is disabled for unauthorized users. Please <a href="Status.html?login=">log in</a> as administrator to use the search function</p>
+#(/num-results)#
+
+<!-- the search results -->
+<script type="text/javascript">
+var progressbar = new Progressbar(#[results]#, document.getElementById("results"));
+</script>
+<div style="float:left; width:70%;">
+
+<!-- show openstreetmap tiles if geoinfo was found -->
+#(geoinfo)#
+    ::
+  <div class="searchresults">
+  <h4 class="linktitle">
+  <img src="http://www.openstreetmap.org/favicon.ico" class="favicon" style="width:16px; height:16px;" alt="" />
+  Location -- click on map to enlarge</h4>
+  <p class="url">
+  #{loc}#
+  <div style="margin: 20px; width: 100px; float: left;">
+  <a href="/osm.png?lon=#[lon]#&amp;lat=#[lat]#&amp;zoom=14" class="thumblink"  style="float:left;" onclick="return hs.expand(this)">
+      <img src="/osm.png?lon=#[lon]#&amp;lat=#[lat]#&amp;zoom=14" width="192" height="192" alt="map #[lon]#, #[lat]#" />
+  </a>
+  <div class="TableCellDark"><a href="http://www.openstreetmap.org/?lat=#[lat]#&amp;lon=#[lon]#&amp;zoom=14">#[name]#</a><br /><a href="http://www.openstreetmap.org/?lat=#[lat]#&amp;lon=#[lon]#&amp;zoom=14">lat=#[lat]#, lon=#[lon]#</a></div> <!-- preview -->
+  <div class="highslide-caption"><a href="http://www.openstreetmap.org/?lat=#[lat]#&amp;lon=#[lon]#&amp;zoom=14">#[name]#</a><br /><a href="http://www.openstreetmap.org/?lat=#[lat]#&amp;lon=#[lon]#&amp;zoom=14">lat=#[lat]#, lon=#[lon]#</a></div> <!-- zoomed -->
+  </div>
+  #{/loc}#
+  </p>
+  <p class="urlinfo" style="clear:left;">Map (c) by <a href="http://www.openstreetmap.org">OpenStreetMap</a> and contributors, CC-BY-SA</p>
+  </div>
+#(/geoinfo)#
+
+<!-- linklist begin -->
+#(resultTable)#::<table width="100%"><tr class="TableHeader"><td width="30%">Media</td><td width="70%">URL</td></tr>#(/resultTable)#
+#{results}#
+<!--#include virtual="yacysearchitem.html?item=#[item]#&eventID=#[eventID]#" -->
+#{/results}#
+#(resultTable)#::</table>#(/resultTable)#
+<!-- linklist end -->
+<!-- attach the bottomline -->
+#(pageNavBottom)#::<div id="pageNavBottom" style="text-align:center">#[resnav]#</div>#(/pageNavBottom)#
+</div>
+<!-- div style="width=220px;" -->
+<!--#include virtual="yacysearchtrailer.html?eventID=#[eventID]#" -->
+<!-- /div -->
+</div>
+<!-- update the search results statistics after the search is finished -->
+<script type="text/javascript">
+
+function latestinfo() {
+  if (window.XMLHttpRequest) { // Mozilla/Safari
+    self.xmlHttpReq = new XMLHttpRequest(); 
+  } else if (window.ActiveXObject) { // IE
+    self.xmlHttpReq = new ActiveXObject("Microsoft.XMLHTTP");
+  }
+  self.xmlHttpReq.open('GET', "yacysearchlatestinfo.json?eventID=#[eventID]#", true);
+  self.xmlHttpReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  self.xmlHttpReq.onreadystatechange = function() {
+    if (self.xmlHttpReq.readyState == 4) {
+      var rsp = eval("(" + self.xmlHttpReq.responseText + ")");
+      statistics(rsp.offset, rsp.itemscount, rsp.totalcount, rsp.localResourceSize, rsp.remoteResourceSize, rsp.remoteIndexCount, rsp.remotePeerCount);
+    }
+  }
+  self.xmlHttpReq.send(null);
+}
+window.setTimeout('latestinfo();',500);
+window.setTimeout('latestinfo();',1000);
+window.setTimeout('latestinfo();',1500);
+window.setTimeout('latestinfo();',2000);
+window.setTimeout('latestinfo();',3000);
+window.setTimeout('latestinfo();',4000);
+window.setTimeout('latestinfo();',5000);
+window.setTimeout('latestinfo();',6000);
+window.setTimeout('latestinfo();',8000);
+window.setTimeout('latestinfo();',10000);
+</script>
+
+</body>
+</html>

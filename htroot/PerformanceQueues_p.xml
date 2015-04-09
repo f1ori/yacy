@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<PerfmanceQueues>
+	<Tasks>#{table}#
+		<Task>
+			<name><![CDATA[#(hasurl)##[shortdescr]#::#[shortdescr]##(/hasurl)#]]></name>
+	        <queueSize>#[queuesize]#</queueSize>
+	        <blocktime>#[blocktime]#</blocktime>
+	        <blockpercent>#[blockpercent]#</blockpercent>
+	        <sleeptime>#[sleeptime]#</sleeptime>
+	        <sleeppercent>#[sleeppercent]#</sleeppercent>
+	        <exectime>#[exectime]#</exectime>
+	        <execpercent>#[execpercent]#</execpercent>
+	        <totalcycles>#[totalcycles]#</totalcycles>
+	        <idlecycles>#[idlecycles]#</idlecycles>
+	        <busycycles>#[busycycles]#</busycycles>
+	        <memscycles>#[memscycles]#</memscycles>
+	        <sleeppercycle>#[sleeppercycle]#</sleeppercycle>
+	        <execpercycle>#[execpercycle]#</execpercycle>
+	        <memusepercycle>#[memusepercycle]#</memusepercycle>
+	        <delayIdleLoop>#[idlesleep]#</delayIdleLoop>
+	        <delayBusyLoop>#[busysleep]#</delayBusyLoop>
+	        <minMemory>#[memprereq]#</minMemory>
+	        <description><![CDATA[#[longdescr]##(recommendation)#::<br/>recommended: #[value]##(/recommendation)#]]></description>
+        </Task>
+	#{/table}#</Tasks>
+	<Cache>
+		<urlCacheSize>#[urlCacheSize]#</urlCacheSize>
+		<wordCacheSize>#[wordCacheSize]#</wordCacheSize>
+		<maxURLinCache>#[maxURLinCache]#</maxURLinCache>
+		<maxAgeOfCache>#[maxAgeOfCache]#</maxAgeOfCache>
+		<minAgeOfCache>#[minAgeOfCache]#</minAgeOfCache>
+		<wordCacheMaxCount>#[wordOutCacheMaxCount]#</wordCacheMaxCount>
+		<wordFlushSize>#[wordFlushSize]#</wordFlushSize>
+	</Cache>
+	<ThreadPools>
+		#{pool}#<Pool>
+			<Name><![CDATA[#[name]#]]></Name>
+			<maxActive>#[maxActive]#</maxActive>
+			<numActive>#[numActive]#</numActive>
+		</Pool>#{/pool}#
+	</ThreadPools>
+</PerfmanceQueues>
